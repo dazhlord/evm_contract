@@ -37,7 +37,7 @@ contract VyperOTC {
         uint256 _shortRequiredAmount
         ) {
         
-        require(_depositStart < block.timestamp && block.timestamp < _depositEnd, "deposit is closed");
+        require(_longRequiredAmount + _shortRequiredAmount > 0, "invalid required amounts");
 
         collateral = _collateral;
         payoff = _payoff;
@@ -82,14 +82,14 @@ contract VyperOTC {
         require(block.timestamp > settleStart, "settle not available yet");
 
         // check if settle is not already been executed
-        require((pnl[Sides.Long] + pnl[Sides.Short]) == 0, "settle already executed");
+        require(!isSettleExecuted(), "settle already executed");
 
         // check if both sides are taken
         require(isSideTaken(Sides.Long) && isSideTaken(Sides.Short), "at least one side is not taken");
 
         (pnl[Sides.Long], pnl[Sides.Short]) = payoff.execute(requiredAmount[Sides.Long], requiredAmount[Sides.Short]);
-        console.log("+ longPnl: %s", pnl[Sides.Long]);
-        console.log("+ shortPnl: %s", pnl[Sides.Short]);
+        console.log("+ long pnl: %s", pnl[Sides.Long]);
+        console.log("+ short pnl: %s", pnl[Sides.Short]);
     }
     
     // claim
@@ -97,7 +97,7 @@ contract VyperOTC {
         console.log("claim invoked");
 
         // check if settle is already been executed
-        require(settleExecuted(), "settle not executed yet");
+        require(isSettleExecuted(), "settle not executed yet");
 
         // check msg.sender is buyer of seller
         Sides senderSide = getAddressSide(msg.sender);
@@ -110,23 +110,23 @@ contract VyperOTC {
         collateral.transferFrom(address(this), msg.sender, pnl[senderSide]);
     }
 
-    function settleExecuted() public view returns (bool) {
+    function isSettleExecuted() public view returns (bool) {
         return (pnl[Sides.Long] + pnl[Sides.Short]) == (requiredAmount[Sides.Long] + requiredAmount[Sides.Short]);
     }
 
-    function pnlOf(Sides _side) external view returns (uint256) {
+    function pnlOf(Sides _side) public view returns (uint256) {
         return pnl[_side];
     }
 
-    function isNoSideTaken() private view returns (bool) {
+    function isNoSideTaken() public view returns (bool) {
         return !isSideTaken(Sides.Long) && !isSideTaken(Sides.Short);
     }
 
-    function isSideTaken(Sides _side) private view returns (bool) {
+    function isSideTaken(Sides _side) public view returns (bool) {
         return users[_side] != address(0);
     }
 
-    function getAddressSide(address account) private view returns (Sides) {
+    function getAddressSide(address account) public view returns (Sides) {
         if(users[Sides.Long] == account) return Sides.Long;
         if(users[Sides.Short] == account) return Sides.Short;
         console.log("no side taken for account %s", account);
