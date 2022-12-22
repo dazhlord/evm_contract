@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.17;
 
 import "hardhat/console.sol";
 
@@ -18,13 +18,32 @@ contract DigitalPayoff is IPayoffPlugin {
         ratePlugin = _ratePlugin;
     }
 
-    function execute(uint256 a, uint256 b) external view returns (uint256, uint256) {
+    function execute(uint256 a, uint256 b) external view returns (uint256 pnlLong, uint256 pnlShort) {
         int256 newSpot = ratePlugin.getLatestPrice();
         
-        if ((isCall && newSpot >= strike) || (!isCall && newSpot < strike)) {
-            return (b, a);
-        } else {
-            return (0, a+b);
+        int256 strike_ = strike;
+        bool isCall_ = isCall;
+        assembly {
+            let c_1 := and(isCall_, or(gt(newSpot, strike_), eq(newSpot, strike_)))
+            let c_2 := and(not(isCall_), lt(newSpot, strike_))
+            
+            switch or(c_1, c_2)
+            case 1 {
+               pnlLong := b
+               pnlShort := a
+            }
+            default {
+                pnlLong := 0
+                pnlShort := add(a, b)
+            }
         }
+
+        // if ((isCall && newSpot >= strike) || (!isCall && newSpot < strike)) {
+        //     pnlLong = b;
+        //     pnlShort = a;
+        // } else {
+        //     pnlLong = 0;
+        //     pnlShort = a+b;
+        // }
     }
 }
