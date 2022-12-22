@@ -3,15 +3,14 @@ pragma solidity ^0.8.9;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import "./payoff/IPayoffPlugin.sol";
 
 /// @custom:security-contact info@vyperprotocol.io
 contract VyperOTC {
 
     enum Sides {
-        Long,
-        Short
+        LONG,
+        SHORT
     }
 
     /** storage */
@@ -44,32 +43,32 @@ contract VyperOTC {
         depositStart = _depositStart;
         depositEnd = _depositEnd;
         settleStart = _settleStart;
-        requiredAmount[Sides.Long] = _longRequiredAmount;
-        requiredAmount[Sides.Short] =_shortRequiredAmount;
+        requiredAmount[Sides.LONG] = _longRequiredAmount;
+        requiredAmount[Sides.SHORT] =_shortRequiredAmount;
     }
 
     
     /** methods */
 
     // deposit
-    function deposit(Sides side) external {
+    function deposit(Sides _side) external {
         console.log("deposit invoked");
 
         // check if deposit is allowed
         require(depositStart < block.timestamp && block.timestamp < depositEnd, "deposit is closed");
 
         // check if side is not already taken
-        require(!isSideTaken(side), "side already taken");
+        require(!isSideTaken(_side), "side already taken");
 
         // check if users is already on the other side
-        if(side == Sides.Long) require(users[Sides.Short] != msg.sender, "users is already seller");
-        if(side == Sides.Short) require(users[Sides.Long] != msg.sender, "users is already buyer");
+        if(_side == Sides.LONG) require(users[Sides.SHORT] != msg.sender, "users is already seller");
+        if(_side == Sides.SHORT) require(users[Sides.LONG] != msg.sender, "users is already buyer");
 
         // receive collateral
-        collateral.transferFrom(msg.sender, address(this), requiredAmount[side]);
+        collateral.transferFrom(msg.sender, address(this), requiredAmount[_side]);
 
         // mint position nft
-        users[side] = msg.sender;
+        users[_side] = msg.sender;
     }
 
     // TODO withdraw
@@ -85,11 +84,11 @@ contract VyperOTC {
         require(!isSettleExecuted(), "settle already executed");
 
         // check if both sides are taken
-        require(isSideTaken(Sides.Long) && isSideTaken(Sides.Short), "at least one side is not taken");
+        require(isSideTaken(Sides.LONG) && isSideTaken(Sides.SHORT), "at least one side is not taken");
 
-        (pnl[Sides.Long], pnl[Sides.Short]) = payoff.execute(requiredAmount[Sides.Long], requiredAmount[Sides.Short]);
-        console.log("+ long pnl: %s", pnl[Sides.Long]);
-        console.log("+ short pnl: %s", pnl[Sides.Short]);
+        (pnl[Sides.LONG], pnl[Sides.SHORT]) = payoff.execute(requiredAmount[Sides.LONG], requiredAmount[Sides.SHORT]);
+        console.log("+ long pnl: %s", pnl[Sides.LONG]);
+        console.log("+ short pnl: %s", pnl[Sides.SHORT]);
     }
     
     // claim
@@ -111,7 +110,7 @@ contract VyperOTC {
     }
 
     function isSettleExecuted() public view returns (bool) {
-        return (pnl[Sides.Long] + pnl[Sides.Short]) == (requiredAmount[Sides.Long] + requiredAmount[Sides.Short]);
+        return (pnl[Sides.LONG] + pnl[Sides.SHORT]) == (requiredAmount[Sides.LONG] + requiredAmount[Sides.SHORT]);
     }
 
     function pnlOf(Sides _side) public view returns (uint256) {
@@ -119,17 +118,17 @@ contract VyperOTC {
     }
 
     function isNoSideTaken() public view returns (bool) {
-        return !isSideTaken(Sides.Long) && !isSideTaken(Sides.Short);
+        return !isSideTaken(Sides.LONG) && !isSideTaken(Sides.SHORT);
     }
 
     function isSideTaken(Sides _side) public view returns (bool) {
         return users[_side] != address(0);
     }
 
-    function getAddressSide(address account) public view returns (Sides) {
-        if(users[Sides.Long] == account) return Sides.Long;
-        if(users[Sides.Short] == account) return Sides.Short;
-        console.log("no side taken for account %s", account);
+    function getAddressSide(address _account) public view returns (Sides) {
+        if(users[Sides.LONG] == _account) return Sides.LONG;
+        if(users[Sides.SHORT] == _account) return Sides.SHORT;
+        console.log("no side taken for account %s", _account);
         revert("no side taken");
     }
 }
