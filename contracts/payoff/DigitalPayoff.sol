@@ -6,20 +6,8 @@ import "hardhat/console.sol";
 import { IRatePlugin } from "../rate/IRatePlugin.sol";
 import { IPayoffPlugin } from "./IPayoffPlugin.sol";
 
-contract DigitalPayoff is IPayoffPlugin {
-    IRatePlugin public immutable ratePlugin;
-    int256 public immutable strike;
-    bool public immutable isCall;
-
-    constructor(int256 _strike, bool _isCall, IRatePlugin _ratePlugin) {
-        strike = _strike;
-        isCall = _isCall;
-
-        ratePlugin = _ratePlugin;
-    }
-
-    function execute(uint256 a, uint256 b) external view returns (uint256 pnlLong, uint256 pnlShort) {
-        int256 newSpot = ratePlugin.getLatestPrice();
+library DigitalPayoffLibrary {
+    function execute(int256 newSpot, int256 strike, bool isCall, uint256 a, uint256 b) public pure returns (uint256 pnlLong, uint256 pnlShort) {
         
         int256 strike_ = strike;
         bool isCall_ = isCall;
@@ -45,5 +33,23 @@ contract DigitalPayoff is IPayoffPlugin {
         //     pnlLong = 0;
         //     pnlShort = a+b;
         // }
+    }
+}
+
+contract DigitalPayoff is IPayoffPlugin {
+    IRatePlugin public immutable ratePlugin;
+    int256 public immutable strike;
+    bool public immutable isCall;
+
+    constructor(int256 _strike, bool _isCall, IRatePlugin _ratePlugin) {
+        strike = _strike;
+        isCall = _isCall;
+
+        ratePlugin = _ratePlugin;
+    }
+
+    function execute(uint256 a, uint256 b) external view returns (uint256 pnlLong, uint256 pnlShort) {
+        int256 newSpot = ratePlugin.getLatestPrice();
+        return DigitalPayoffLibrary.execute(newSpot, strike, isCall, a, b);
     }
 }

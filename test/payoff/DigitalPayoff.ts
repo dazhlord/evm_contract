@@ -10,7 +10,15 @@ describe("DigitalPayoff", function () {
   async function deployContract() {
     const MockRate = await ethers.getContractFactory("MockRate");
     const mockRate = await MockRate.deploy(PRICE_AT_DEPLOY);
-    const DigitalPayoff = await ethers.getContractFactory("DigitalPayoff");
+
+    const DigitalPayoffLibrary = await ethers.getContractFactory("DigitalPayoffLibrary");
+    const digitalPayoffLibrary = await DigitalPayoffLibrary.deploy();
+
+    const DigitalPayoff = await ethers.getContractFactory("DigitalPayoff", {
+      libraries: {
+        DigitalPayoffLibrary: digitalPayoffLibrary.address,
+      },
+    });
     return { DigitalPayoff, mockRate };
   }
 
