@@ -65,18 +65,14 @@ describe("VyperOTC", function () {
     await collateralMint.connect(addr1).approve(contractOTC.address, longRequiredAmount);
     await contractOTC.connect(addr1).deposit(BUYER_SIDE);
     expect(await collateralMint.balanceOf(contractOTC.address)).to.be.eq(longRequiredAmount);
-    expect(await contractOTC.balanceOf(addr1.address, 0)).to.be.eq(1);
-    expect(await contractOTC.totalSupply(BUYER_SIDE)).to.be.eq(1);
-    expect(await contractOTC.totalSupply(SELLER_SIDE)).to.be.eq(0);
+    expect(await contractOTC.users(BUYER_SIDE)).to.be.eq(addr1.address);
 
     // addr2 deposit as seller
     await collateralMint.connect(addr2).approve(contractOTC.address, shortRequiredAmount);
     await contractOTC.connect(addr2).deposit(SELLER_SIDE);
     expect(await collateralMint.balanceOf(contractOTC.address)).to.be.eq(longRequiredAmount + shortRequiredAmount);
-    expect(await contractOTC.balanceOf(addr1.address, BUYER_SIDE)).to.be.eq(1);
-    expect(await contractOTC.balanceOf(addr2.address, SELLER_SIDE)).to.be.eq(1);
-    expect(await contractOTC.totalSupply(BUYER_SIDE)).to.be.eq(1);
-    expect(await contractOTC.totalSupply(SELLER_SIDE)).to.be.eq(1);
+    expect(await contractOTC.users(BUYER_SIDE)).to.be.eq(addr1.address);
+    expect(await contractOTC.users(SELLER_SIDE)).to.be.eq(addr2.address);
 
     // time traveling
     await time.increaseTo(settleStart + A_DAY_IN_SECONDS);
@@ -86,18 +82,12 @@ describe("VyperOTC", function () {
 
     // addr1 claim assets
     await contractOTC.connect(addr1).claim();
-    expect(await contractOTC.balanceOf(addr1.address, BUYER_SIDE)).to.be.eq(0);
-    expect(await contractOTC.balanceOf(addr2.address, SELLER_SIDE)).to.be.eq(1);
-    expect(await contractOTC.totalSupply(BUYER_SIDE)).to.be.eq(0);
-    expect(await contractOTC.totalSupply(SELLER_SIDE)).to.be.eq(1);
+    console.log("should be zero address: ", await contractOTC.users(BUYER_SIDE));
+    expect(await contractOTC.users(SELLER_SIDE)).to.be.eq(addr2.address);
 
     // addr2 claim assets
     await contractOTC.connect(addr2).claim();
     expect(await collateralMint.balanceOf(contractOTC.address)).to.be.eq(0);
-    expect(await contractOTC.balanceOf(addr1.address, BUYER_SIDE)).to.be.eq(0);
-    expect(await contractOTC.balanceOf(addr2.address, SELLER_SIDE)).to.be.eq(0);
-    expect(await contractOTC.totalSupply(BUYER_SIDE)).to.be.eq(0);
-    expect(await contractOTC.totalSupply(SELLER_SIDE)).to.be.eq(0);
   });
 
   it("can't fund when deposit is closed", async function () {

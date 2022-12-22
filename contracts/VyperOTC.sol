@@ -3,13 +3,11 @@ pragma solidity ^0.8.9;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
 import "./payoff/IPayoffPlugin.sol";
 
 /// @custom:security-contact info@vyperprotocol.io
-contract VyperOTC is ERC1155, ERC1155Supply {
+contract VyperOTC {
 
     enum Sides {
         Long,
@@ -23,10 +21,10 @@ contract VyperOTC is ERC1155, ERC1155Supply {
     uint public immutable depositStart;
     uint public immutable depositEnd;
     uint public immutable settleStart;
+    mapping(Sides => address) public users;
     mapping(Sides => uint256) public requiredAmount;
     mapping(Sides => uint256) public pnl;
-    bool public settleExecuted = false;
-
+    
     /** constructor */
 
     constructor(
@@ -37,7 +35,7 @@ contract VyperOTC is ERC1155, ERC1155Supply {
         uint _settleStart,
         uint256 _longRequiredAmount,
         uint256 _shortRequiredAmount
-        ) ERC1155("") {
+        ) {
         
         require(_depositStart < block.timestamp && block.timestamp < _depositEnd, "deposit is closed");
 
@@ -70,7 +68,7 @@ contract VyperOTC is ERC1155, ERC1155Supply {
         collateral.transferFrom(msg.sender, address(this), requiredAmount[side]);
 
         // mint position nft
-        _mint(msg.sender, uint256(side), 1, "");
+        users[side] = msg.sender;
     }
 
     // TODO withdraw
@@ -94,7 +92,6 @@ contract VyperOTC is ERC1155, ERC1155Supply {
         console.log("+ longPnl: %s", pnl[Sides.Long]);
         console.log("+ shortPnl: %s", pnl[Sides.Short]);
 
-        settleExecuted = true;
     }
     
     // claim
@@ -102,17 +99,21 @@ contract VyperOTC is ERC1155, ERC1155Supply {
         console.log("claim invoked");
 
         // check if settle is already been executed
-        require(settleExecuted, "settle not executed yet");
+        require(settleExecuted(), "settle not executed yet");
 
         // check msg.sender is buyer of seller
         Sides senderSide = getAddressSide(msg.sender);
 
         // burn position nft
-        _burn(msg.sender, uint256(senderSide), 1);
+        users[senderSide] = address(0);
     
         // approve and transfer back collateral
         collateral.approve(address(this), pnl[senderSide]);
         collateral.transferFrom(address(this), msg.sender, pnl[senderSide]);
+    }
+
+    function settleExecuted() public view returns (bool) {
+        return (pnl[Sides.Long] + pnl[Sides.Short]) == (requiredAmount[Sides.Long] + requiredAmount[Sides.Short]);
     }
 
     function pnlOf(Sides _side) external view returns (uint256) {
@@ -123,25 +124,16 @@ contract VyperOTC is ERC1155, ERC1155Supply {
         return !isSideTaken(Sides.Long) && !isSideTaken(Sides.Short);
     }
 
-    function isSideTaken(Sides side) private view returns (bool) {
-        return exists(uint256(side));
+    function isSideTaken(Sides _side) private view returns (bool) {
+        return users[_side] != address(0);
     }
 
     function getAddressSide(address account) private view returns (Sides) {
-        if(balanceOf(account, uint256(Sides.Long)) == 1) return Sides.Long;
-        if(balanceOf(account, uint256(Sides.Short)) == 1) return Sides.Short;
+        if(users[Sides.Long] == account) return Sides.Long;
+        if(users[Sides.Short] == account) return Sides.Short;
         console.log("no side taken for account %s", account);
         revert("no side taken");
     }
-
-    // The following functions are overrides required by Solidity.
-    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-        internal
-        override(ERC1155, ERC1155Supply)
-    {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-    }
-
 }
 
 
