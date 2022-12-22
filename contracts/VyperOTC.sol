@@ -54,15 +54,16 @@ contract VyperOTC {
     // deposit
     function deposit(Sides side) external {
         console.log("deposit invoked");
-        // console.log("depositStart:      %s", depositStart);
-        // console.log("block.timestamp:   %s", block.timestamp);
-        // console.log("depositEnd:        %s", depositEnd);
 
         // check if deposit is allowed
         require(depositStart < block.timestamp && block.timestamp < depositEnd, "deposit is closed");
 
         // check if side is not already taken
         require(!isSideTaken(side), "side already taken");
+
+        // check if users is already on the other side
+        if(side == Sides.Long) require(users[Sides.Short] != msg.sender, "users is already seller");
+        if(side == Sides.Short) require(users[Sides.Long] != msg.sender, "users is already buyer");
 
         // receive collateral
         collateral.transferFrom(msg.sender, address(this), requiredAmount[side]);
@@ -76,8 +77,6 @@ contract VyperOTC {
     // settle
     function settle() external {
         console.log("settle invoked");
-        // console.log("block.timestamp:    %s", block.timestamp);
-        // console.log("settleStart:        %s", settleStart);
 
         // check if settle is available
         require(block.timestamp > settleStart, "settle not available yet");
@@ -91,7 +90,6 @@ contract VyperOTC {
         (pnl[Sides.Long], pnl[Sides.Short]) = payoff.execute(requiredAmount[Sides.Long], requiredAmount[Sides.Short]);
         console.log("+ longPnl: %s", pnl[Sides.Long]);
         console.log("+ shortPnl: %s", pnl[Sides.Short]);
-
     }
     
     // claim
