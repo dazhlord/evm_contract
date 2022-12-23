@@ -63,7 +63,7 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: !!process.env.ENABLE_GAS_REPORT,
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-    ...GAS_REPORTER_CONFIG.MATIC_POLYGON,
+    ...GAS_REPORTER_CONFIG.ETH_ETHERSCAN,
     // outputFile: "gas_report_asm+no_lib.txt",
     // noColors: true,
   },
