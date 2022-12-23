@@ -4,6 +4,7 @@ import "@nomiclabs/hardhat-solhint";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 import "hardhat-tracer";
+import "hardhat-storage-layout";
 // import "hardhat-ethernal";
 
 require("dotenv").config();

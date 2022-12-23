@@ -88,7 +88,6 @@ contract TradePool {
 
         Trade storage t = trades[_tradeID];
 
-
         // check if deposit is allowed
         require(t.depositStart < block.timestamp && block.timestamp < t.depositEnd, "deposit is closed");
 
@@ -131,20 +130,18 @@ contract TradePool {
         // check if settle is available
         require(block.timestamp > t.settleStart, "settle not available yet");
 
-        // // check if settle is not already been executed
-        // require(!isSettleExecuted(_tradeID), "settle already executed");
-
-        // // check if both sides are taken
-        // require(isSideTaken(_tradeID, Sides.LONG) && isSideTaken(_tradeID, Sides.SHORT), "at least one side is not taken");
+        // check if both sides are taken
         require(t.stage == TradeStage.BOTH_FUNDED);
 
-        (t.pnl[Sides.LONG], t.pnl[Sides.SHORT]) = t.payoff.execute(t.requiredAmount[Sides.LONG], t.requiredAmount[Sides.SHORT]);
-        console.log("+ long pnl: %s", t.pnl[Sides.LONG]);
-        console.log("+ short pnl: %s", t.pnl[Sides.SHORT]);
+        (uint256 longPnl, uint256 shortPnl) = t.payoff.execute(t.requiredAmount[Sides.LONG], t.requiredAmount[Sides.SHORT]);
+        console.log("+ long pnl: %s", longPnl);
+        console.log("+ short pnl: %s", shortPnl);
 
+        t.pnl[Sides.LONG] = longPnl;
+        t.pnl[Sides.SHORT] = shortPnl;
         t.stage = TradeStage.SETTLED;
 
-        emit TradeSettled(_tradeID, t.pnl[Sides.LONG], t.pnl[Sides.SHORT]);
+        emit TradeSettled(_tradeID, longPnl, shortPnl);
     }
     
     // claim

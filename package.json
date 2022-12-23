@@ -30,6 +30,7 @@
     "hardhat-contract-sizer": "^2.6.1",
     "hardhat-ethernal": "^3.1.0",
     "hardhat-gas-reporter": "^1.0.9",
+    "hardhat-storage-layout": "^0.1.7",
     "hardhat-tracer": "^1.2.1",
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
