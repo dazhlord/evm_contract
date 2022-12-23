@@ -14,14 +14,7 @@ describe("VyperOTC", function () {
 
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
     const ChainlinkRate = await ethers.getContractFactory("ChainlinkRate");
-
-    const DigitalPayoffLibrary = await ethers.getContractFactory("DigitalPayoffLibrary");
-    const digitalPayoffLibrary = await DigitalPayoffLibrary.deploy();
-    const DigitalPayoff = await ethers.getContractFactory("DigitalPayoff", {
-      libraries: {
-        DigitalPayoffLibrary: digitalPayoffLibrary.address,
-      },
-    });
+    const DigitalPayoff = await ethers.getContractFactory("DigitalPayoff");
 
     const VyperOTC = await ethers.getContractFactory("VyperOTC");
 
