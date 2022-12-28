@@ -1,7 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import hre from "hardhat";
+import { ethers, tracer } from "hardhat";
 import { BigNumber } from "ethers";
 import "@nomiclabs/hardhat-ethers";
 import { bn, CHAINLINK_AGGREGATORS, A_DAY_IN_SECONDS } from "./utils";
@@ -13,7 +12,7 @@ const SHORT_REQUIRED_AMOUNT = 100;
 const BUYER_SIDE = 0;
 const SELLER_SIDE = 1;
 
-describe.only("TradeContainer", function () {
+describe.only("TradePool", function () {
   async function deployVyperSuite() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
@@ -39,6 +38,7 @@ describe.only("TradeContainer", function () {
   }
 
   it("standard flow", async function () {
+    tracer.enabled = false;
     const [, addr1, addr2] = await ethers.getSigners();
     const { collateralMint, DigitalPayoff, tradePool, chainlinkRate } = await loadFixture(deployVyperSuite);
 
@@ -49,6 +49,10 @@ describe.only("TradeContainer", function () {
     const depositStart = now - A_DAY_IN_SECONDS;
     const depositEnd = now + 2 * A_DAY_IN_SECONDS;
     const settleStart = now + 15 * A_DAY_IN_SECONDS;
+
+    console.log(`depositStart: ${depositStart} - 0x${depositStart.toString(16)}`);
+    console.log(`depositEnd: ${depositEnd} - 0x${depositEnd.toString(16)}`);
+    console.log(`settleStart: ${settleStart} - 0x${settleStart.toString(16)}`);
 
     const createTradeSig = await tradePool.createTrade(
       collateralMint.address,
@@ -83,7 +87,9 @@ describe.only("TradeContainer", function () {
     await time.increaseTo(settleStart + A_DAY_IN_SECONDS);
 
     // owner settle the contract
+    tracer.enabled = true;
     await tradePool.settle(tradeID);
+    tracer.enabled = false;
 
     // addr1 claim assets
     await tradePool.connect(addr1).claim(tradeID, BUYER_SIDE);

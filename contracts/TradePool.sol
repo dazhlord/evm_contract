@@ -36,20 +36,45 @@ contract TradePool {
     }
 
     struct Trade {
+        // SLOT 0
+        uint64 depositStart;
+        uint64 depositEnd;
+        uint64 settleStart;
+        bool settleExecuted;
+        
+        // SLOT 1
         IERC20 collateral;
+        
+        // SLOT 2
         IPayoffPlugin payoff;
-        uint256 depositStart;
-        uint256 depositEnd;
-        uint256 settleStart;
-        TradeStage stage;
-        mapping(Sides => address) users;
-        mapping(Sides => uint256) requiredAmount;
-        mapping(Sides => uint256) pnl;
+
+        // SLOT 3
+        uint256 longRequiredAmount;
+        
+        // SLOT 4
+        uint256 shortRequiredAmount;
+    }
+
+    struct SettleData {
+        // SLOT 0
+        // 20 byte
+        address longUser;
+        // SLOT 1
+        // 20 byte
+        address shortUser;
+
+        // SLOT 2
+        // 32 byte
+        uint256 longPnl;
+        // SLOT 3
+        // 32 byte
+        uint256 shortPnl;
     }
 
     /** storage */
 
     mapping(uint256 => Trade) public trades;
+    mapping(uint256 => SettleData) public settleData;
     uint256 private nextIdx = 0;
 
     /** methods */
@@ -57,9 +82,9 @@ contract TradePool {
     function createTrade(
         IERC20 _collateral,
         IPayoffPlugin _payoff,
-        uint256 _depositStart,
-        uint256 _depositEnd,
-        uint256 _settleStart,
+        uint64 _depositStart,
+        uint64 _depositEnd,
+        uint64 _settleStart,
         uint256 _longRequiredAmount,
         uint256 _shortRequiredAmount
         ) public {
@@ -70,15 +95,14 @@ contract TradePool {
         console.log("tradeID: %s", tradeID);
 
         Trade storage t = trades[tradeID];
-        t.collateral = _collateral;
-        t.payoff = _payoff;
-        t.depositStart = _depositStart;
-        t.depositEnd = _depositEnd;
-        t.settleStart = _settleStart;
-        t.stage = TradeStage.UNFUNDED;
-        t.requiredAmount[Sides.LONG] = _longRequiredAmount;
-        t.requiredAmount[Sides.SHORT] =_shortRequiredAmount;
-
+        uint256 slot2Word = (uint256(_settleStart) << 128) | (uint256(_depositEnd) << 64) | uint256(_depositStart);
+        assembly {
+            sstore(t.slot, slot2Word)
+            sstore(add(t.slot, 1), _collateral)
+            sstore(add(t.slot, 2), _payoff)
+            sstore(add(t.slot, 3), _longRequiredAmount)
+            sstore(add(t.slot, 4), _shortRequiredAmount)
+        }
         emit TradeCreated(tradeID);
     }
 
@@ -86,34 +110,33 @@ contract TradePool {
     function deposit(uint256 _tradeID, Sides _side) external {
         console.log("deposit invoked");
 
-        Trade storage t = trades[_tradeID];
+        Trade memory t = trades[_tradeID];
+        SettleData memory s = settleData[_tradeID];
+        console.log("depositStart: ", t.depositStart);
+        console.log("depositEnd: ", t.depositEnd);
+        console.log("settleStart: ", t.settleStart);
 
         // check if deposit is allowed
         require(t.depositStart < block.timestamp && block.timestamp < t.depositEnd, "deposit is closed");
 
+        TradeStage tradeStage = getTradeStage(s);
         if(_side == Sides.LONG) {
-            require(t.stage == TradeStage.UNFUNDED || t.stage == TradeStage.SELLER_FUNDED);
-            require(t.users[Sides.SHORT] != msg.sender, "users is already seller");
+            require(tradeStage == TradeStage.UNFUNDED || tradeStage == TradeStage.SELLER_FUNDED);
+            require(s.shortUser != msg.sender, "users is already seller");
         }
         if(_side == Sides.SHORT) {
-            require(t.stage == TradeStage.UNFUNDED || t.stage == TradeStage.BUYER_FUNDED);
-            require(t.users[Sides.LONG] != msg.sender, "users is already buyer");
+            require(tradeStage == TradeStage.UNFUNDED || tradeStage == TradeStage.BUYER_FUNDED);
+            require(s.longUser != msg.sender, "users is already buyer");
         }
 
         // receive collateral
-        t.collateral.transferFrom(msg.sender, address(this), t.requiredAmount[_side]);
+        t.collateral.transferFrom(msg.sender, address(this), _side == Sides.LONG ? t.longRequiredAmount : t.shortRequiredAmount);
 
         // save funding wallet
-        t.users[_side] = msg.sender;
-
-        if(t.stage == TradeStage.UNFUNDED) {
-            if(_side == Sides.LONG) {
-                t.stage = TradeStage.BUYER_FUNDED;
-            } else {
-                t.stage = TradeStage.SELLER_FUNDED;
-            }
+        if(_side == Sides.LONG) {
+            settleData[_tradeID].longUser = msg.sender;
         } else {
-            t.stage = TradeStage.BOTH_FUNDED;
+            settleData[_tradeID].shortUser = msg.sender;
         }
 
         emit TradeFunded(_tradeID, _side, msg.sender);
@@ -125,21 +148,22 @@ contract TradePool {
     function settle(uint256 _tradeID) external {
         console.log("settle invoked");
 
-        Trade storage t = trades[_tradeID];
+        Trade memory t = trades[_tradeID];
 
         // check if settle is available
         require(block.timestamp > t.settleStart, "settle not available yet");
 
         // check if both sides are taken
-        require(t.stage == TradeStage.BOTH_FUNDED);
+        TradeStage tradeStage = getTradeStage(settleData[_tradeID]);
+        require(tradeStage == TradeStage.BOTH_FUNDED);
 
-        (uint256 longPnl, uint256 shortPnl) = t.payoff.execute(t.requiredAmount[Sides.LONG], t.requiredAmount[Sides.SHORT]);
+        (uint256 longPnl, uint256 shortPnl) = t.payoff.execute(t.longRequiredAmount, t.shortRequiredAmount);
         console.log("+ long pnl: %s", longPnl);
         console.log("+ short pnl: %s", shortPnl);
 
-        t.pnl[Sides.LONG] = longPnl;
-        t.pnl[Sides.SHORT] = shortPnl;
-        t.stage = TradeStage.SETTLED;
+        settleData[_tradeID].longPnl = longPnl;
+        settleData[_tradeID].shortPnl = shortPnl;
+        trades[_tradeID].settleExecuted = true;
 
         emit TradeSettled(_tradeID, longPnl, shortPnl);
     }
@@ -151,44 +175,35 @@ contract TradePool {
         Trade storage t = trades[_tradeID];
 
         // check if settle is already been executed
-        require(t.stage == TradeStage.SETTLED, "settle not executed yet");
+        require(t.settleExecuted, "settle not executed yet");
 
         // check if the user is the side owner
-        require(t.users[_side] == msg.sender, "unknown user");
+        if(_side == Sides.LONG) {
+            require(settleData[_tradeID].longUser == msg.sender, "unknown user");
+        } else {
+            require(settleData[_tradeID].shortUser == msg.sender, "unknown user");
+        }
 
         // approve and transfer back collateral
-        t.collateral.approve(address(this), t.pnl[_side]);
-        t.collateral.transferFrom(address(this), msg.sender, t.pnl[_side]);
+        uint256 pnl = _side == Sides.LONG ? settleData[_tradeID].longPnl : settleData[_tradeID].shortPnl;
+        t.collateral.approve(address(this), pnl);
+        t.collateral.transferFrom(address(this), msg.sender, pnl);
 
         // remove user
-        t.users[_side] = address(0);
+        if(_side == Sides.LONG) {
+            settleData[_tradeID].longUser = address(0);
+        } else {
+            settleData[_tradeID].shortUser = address(0);
+        }
 
         emit TradeClaimed(_tradeID, _side);
     }
 
-    // function isSettleExecuted(uint256 _tradeID) public view returns (bool) {
-    //     Trade storage t = trades[_tradeID];
-    //     return ( t.pnl[Sides.LONG] + t.pnl[Sides.SHORT]) == (t.requiredAmount[Sides.LONG] + t.requiredAmount[Sides.SHORT]);
-    // }
-
-    function pnlOf(uint256 _tradeID, Sides _side) public view returns (uint256) {
-        return trades[_tradeID].pnl[_side];
-    }
-
-    // function isNoSideTaken(uint256 _tradeID) public view returns (bool) {
-    //     return !isSideTaken(_tradeID, Sides.LONG) && !isSideTaken(_tradeID, Sides.SHORT);
-    // }
-
-    // function isSideTaken(uint256 _tradeID, Sides _side) public view returns (bool) {
-    //     return trades[_tradeID].users[_side] != address(0);
-    // }
-
-    function getAddressSide(uint256 _tradeID, address _account) public view returns (Sides) {
-        Trade storage t = trades[_tradeID];
-        if(t.users[Sides.LONG] == _account) return Sides.LONG;
-        if(t.users[Sides.SHORT] == _account) return Sides.SHORT;
-        console.log("no side taken for account %s", _account);
-        revert("no side taken");
+    function getTradeStage(SettleData memory s) public pure returns (TradeStage) {
+        if(s.longUser == address(0) && s.shortUser == address(0)) return TradeStage.UNFUNDED;
+        if(s.longUser != address(0) && s.shortUser == address(0)) return TradeStage.BUYER_FUNDED;
+        if(s.longUser != address(0) && s.shortUser == address(0)) return TradeStage.BUYER_FUNDED;
+        /*if(t.longUser != address(0) && t.shortUser != address(0))*/ return TradeStage.BOTH_FUNDED;
     }
 }
 
