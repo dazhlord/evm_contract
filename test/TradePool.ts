@@ -12,7 +12,7 @@ const SHORT_REQUIRED_AMOUNT = 100;
 const BUYER_SIDE = 0;
 const SELLER_SIDE = 1;
 
-describe("TradePool", function () {
+describe.only("TradePool", function () {
   async function deployVyperSuite() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
@@ -38,6 +38,7 @@ describe("TradePool", function () {
   }
 
   it("standard flow", async function () {
+    tracer.enabled = false;
     const [, addr1, addr2] = await ethers.getSigners();
     const { collateralMint, DigitalPayoff, tradePool, chainlinkRate } = await loadFixture(deployVyperSuite);
 
@@ -49,19 +50,18 @@ describe("TradePool", function () {
     const depositEnd = now + 2 * A_DAY_IN_SECONDS;
     const settleStart = now + 15 * A_DAY_IN_SECONDS;
 
-    console.log(`depositStart: ${depositStart} - 0x${depositStart.toString(16)}`);
     console.log(`depositEnd: ${depositEnd} - 0x${depositEnd.toString(16)}`);
     console.log(`settleStart: ${settleStart} - 0x${settleStart.toString(16)}`);
-
+    tracer.enabled = true;
     const createTradeSig = await tradePool.createTrade(
       collateralMint.address,
       digitalPayoff.address,
-      depositStart,
       depositEnd,
       settleStart,
       LONG_REQUIRED_AMOUNT,
       SHORT_REQUIRED_AMOUNT
     );
+    tracer.enabled = false;
     const receipt = await createTradeSig.wait(1);
     const returnEvent = receipt.events.pop();
     const tradeID = returnEvent.args[0];

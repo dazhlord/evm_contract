@@ -37,21 +37,18 @@ contract TradePool {
 
     struct Trade {
         // SLOT 0
-        uint64 depositStart;
+        IERC20 collateral;
         uint64 depositEnd;
-        uint64 settleStart;
-        bool settleExecuted;
         
         // SLOT 1
-        IERC20 collateral;
-        
-        // SLOT 2
         IPayoffPlugin payoff;
+        uint64 settleStart;
+        bool settleExecuted;
 
-        // SLOT 3
+        // SLOT 2
         uint256 longRequiredAmount;
         
-        // SLOT 4
+        // SLOT 3
         uint256 shortRequiredAmount;
     }
 
@@ -82,7 +79,6 @@ contract TradePool {
     function createTrade(
         IERC20 _collateral,
         IPayoffPlugin _payoff,
-        uint64 _depositStart,
         uint64 _depositEnd,
         uint64 _settleStart,
         uint256 _longRequiredAmount,
@@ -95,13 +91,13 @@ contract TradePool {
         console.log("tradeID: %s", tradeID);
 
         Trade storage t = trades[tradeID];
-        uint256 slot2Word = (uint256(_settleStart) << 128) | (uint256(_depositEnd) << 64) | uint256(_depositStart);
+        bytes32 slot_0 = (bytes32(bytes8(_depositEnd))   >> 32) | (bytes32(bytes20(address(  _collateral))) >> 96);
+        bytes32 slot_1 = (bytes32(bytes8(_settleStart))  >> 32) | (bytes32(bytes20(address(      _payoff))) >> 96);
         assembly {
-            sstore(t.slot, slot2Word)
-            sstore(add(t.slot, 1), _collateral)
-            sstore(add(t.slot, 2), _payoff)
-            sstore(add(t.slot, 3), _longRequiredAmount)
-            sstore(add(t.slot, 4), _shortRequiredAmount)
+            sstore(t.slot, slot_0)
+            sstore(add(t.slot, 1), slot_1)
+            sstore(add(t.slot, 2), _longRequiredAmount)
+            sstore(add(t.slot, 3), _shortRequiredAmount)
         }
         emit TradeCreated(tradeID);
     }
@@ -112,12 +108,9 @@ contract TradePool {
 
         Trade memory t = trades[_tradeID];
         SettleData memory s = settleData[_tradeID];
-        console.log("depositStart: ", t.depositStart);
-        console.log("depositEnd: ", t.depositEnd);
-        console.log("settleStart: ", t.settleStart);
 
         // check if deposit is allowed
-        require(t.depositStart < block.timestamp && block.timestamp < t.depositEnd, "deposit is closed");
+        require(block.timestamp < t.depositEnd, "deposit is closed");
 
         TradeStage tradeStage = getTradeStage(s);
         if(_side == Sides.LONG) {
