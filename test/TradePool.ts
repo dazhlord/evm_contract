@@ -52,7 +52,6 @@ describe.only("TradePool", function () {
 
     console.log(`depositEnd: ${depositEnd} - 0x${depositEnd.toString(16)}`);
     console.log(`settleStart: ${settleStart} - 0x${settleStart.toString(16)}`);
-    tracer.enabled = true;
     const createTradeSig = await tradePool.createTrade(
       collateralMint.address,
       digitalPayoff.address,
@@ -61,7 +60,6 @@ describe.only("TradePool", function () {
       LONG_REQUIRED_AMOUNT,
       SHORT_REQUIRED_AMOUNT
     );
-    tracer.enabled = false;
     const receipt = await createTradeSig.wait(1);
     const returnEvent = receipt.events.pop();
     const tradeID = returnEvent.args[0];
@@ -86,10 +84,12 @@ describe.only("TradePool", function () {
     await time.increaseTo(settleStart + A_DAY_IN_SECONDS);
 
     // owner settle the contract
+    tracer.enabled = true;
     await tradePool.settle(tradeID);
 
     // addr1 claim assets
     await tradePool.connect(addr1).claim(tradeID, BUYER_SIDE);
+    tracer.enabled = false;
     // expect(await tradeID.users(SELLER_SIDE)).to.be.eq(addr2.address);
 
     // addr2 claim assets
