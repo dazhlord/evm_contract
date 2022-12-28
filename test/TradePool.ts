@@ -12,7 +12,7 @@ const SHORT_REQUIRED_AMOUNT = 100;
 const BUYER_SIDE = 0;
 const SELLER_SIDE = 1;
 
-describe.only("TradePool", function () {
+describe("TradePool", function () {
   async function deployVyperSuite() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
@@ -38,7 +38,6 @@ describe.only("TradePool", function () {
   }
 
   it("standard flow", async function () {
-    tracer.enabled = false;
     const [, addr1, addr2] = await ethers.getSigners();
     const { collateralMint, DigitalPayoff, tradePool, chainlinkRate } = await loadFixture(deployVyperSuite);
 
@@ -87,9 +86,7 @@ describe.only("TradePool", function () {
     await time.increaseTo(settleStart + A_DAY_IN_SECONDS);
 
     // owner settle the contract
-    tracer.enabled = true;
     await tradePool.settle(tradeID);
-    tracer.enabled = false;
 
     // addr1 claim assets
     await tradePool.connect(addr1).claim(tradeID, BUYER_SIDE);
