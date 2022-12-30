@@ -22,19 +22,6 @@ contract TradePool {
         SHORT
     }
 
-    // State machine possible states
-    // Available state changes:
-    // - UNFUNDED -> BUYER_FUNDED -> SELLER_FUNDED -> BOTH_FUNDED -> SETTLED
-    // - UNFUNDED -> SELLER_FUNDED -> BUYER_FUNDED -> BOTH_FUNDED -> SETTLED
-    // TODO include state flows for dead contracts
-    enum TradeStage {
-        UNFUNDED,
-        BUYER_FUNDED,
-        SELLER_FUNDED,
-        BOTH_FUNDED,
-        SETTLED
-    }
-
     struct Trade {
         // SLOT 0
         IERC20 collateral;
