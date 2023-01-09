@@ -35,7 +35,7 @@ contract DigitalPayoffPool is IPayoffPoolPlugin {
     function execute(uint256 payoffID, uint256 a, uint256 b) external view returns (uint256 pnlLong, uint256 pnlShort) {
 
         DigitalData memory d = digitalData[payoffID];
-        int256 newSpot = d.ratePlugin.getLatestPrice();
+        (int256 newSpot, ) = d.ratePlugin.getLatestPrice();
         
         int256 strike_ = d.strike;
         bool isCall_ = d.isCall;

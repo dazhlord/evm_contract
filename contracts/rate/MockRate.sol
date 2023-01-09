@@ -12,8 +12,8 @@ contract MockRate is IRatePlugin, Ownable {
         price = _price;
     }
 
-    function getLatestPrice() external view returns (int256) {
-        return price;
+    function getLatestPrice() external view returns (int256, uint256) {
+        return (price, block.timestamp);
     }
 
     function setPrice(int256 _newPrice) public onlyOwner {

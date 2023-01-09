@@ -15,7 +15,7 @@ describe("MockRate", function () {
 
   it("get latest price", async function () {
     const { mockRate } = await loadFixture(deployContract);
-    expect(await mockRate.getLatestPrice()).to.be.eq(PRICE_AT_DEPLOY);
+    expect((await mockRate.getLatestPrice())[0]).to.be.eq(PRICE_AT_DEPLOY);
   });
 
   it("update internal price", async function () {
@@ -23,7 +23,7 @@ describe("MockRate", function () {
 
     const newPrice = bn(100);
     await mockRate.setPrice(newPrice);
-    expect(await mockRate.getLatestPrice()).to.be.eq(newPrice);
+    expect((await mockRate.getLatestPrice())[0]).to.be.eq(newPrice);
   });
 
   it("only owner can update price", async function () {

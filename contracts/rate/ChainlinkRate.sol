@@ -11,13 +11,13 @@ contract ChainlinkRate is IRatePlugin {
         priceFeed = AggregatorV3Interface(aggregatorAddress);
     }
 
-    function getLatestPrice() public view returns (int256 price) {
+    function getLatestPrice() public view returns (int256 price,uint256 updatedAt) {
         (
-            ,
-            /*uint80 roundID*/ price /*uint startedAt*/ /*uint timeStamp*/ /*uint80 answeredInRound*/,
-            ,
-            ,
-
+            /* uint80 roundID */,
+            price,
+            /* uint startedAt */,
+            updatedAt,
+            /* uint80 answeredInRound */
         ) = priceFeed.latestRoundData();
     }
 }
