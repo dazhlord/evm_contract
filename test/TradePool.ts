@@ -38,10 +38,8 @@ describe("TradePool", function () {
   }
 
   it("standard flow", async function () {
-    tracer.enabled = false;
     const [, addr1, addr2] = await ethers.getSigners();
     const { collateralMint, digitalPayoffPool, tradePool, chainlinkRate } = await loadFixture(deployVyperSuite);
-    tracer.enabled = true;
 
     // digital payoff
     const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(bn(1), true, chainlinkRate.address);
