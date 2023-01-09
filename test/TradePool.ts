@@ -1,7 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers, tracer } from "hardhat";
-import { BigNumber } from "ethers";
 import "@nomiclabs/hardhat-ethers";
 import { bn, CHAINLINK_AGGREGATORS, A_DAY_IN_SECONDS } from "./utils";
 
@@ -12,7 +11,7 @@ const SHORT_REQUIRED_AMOUNT = 100;
 const BUYER_SIDE = 0;
 const SELLER_SIDE = 1;
 
-describe.only("TradePool", function () {
+describe("TradePool", function () {
   async function deployVyperSuite() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
@@ -29,24 +28,28 @@ describe.only("TradePool", function () {
     const ChainlinkRate = await ethers.getContractFactory("ChainlinkRate");
     const chainlinkRate = await ChainlinkRate.deploy(CHAINLINK_AGGREGATORS.GOERLI_AGGREGATOR_ETH_USD);
 
-    const DigitalPayoff = await ethers.getContractFactory("DigitalPayoff");
+    const DigitalPayoffPool = await ethers.getContractFactory("DigitalPayoffPool");
+    const digitalPayoffPool = await DigitalPayoffPool.deploy();
 
     const TradePool = await ethers.getContractFactory("TradePool");
     const tradePool = await TradePool.deploy();
 
-    return { collateralMint, DigitalPayoff, tradePool, chainlinkRate };
+    return { collateralMint, digitalPayoffPool, tradePool, chainlinkRate };
   }
 
   it("standard flow", async function () {
     tracer.enabled = false;
     const [, addr1, addr2] = await ethers.getSigners();
-    const { collateralMint, DigitalPayoff, tradePool, chainlinkRate } = await loadFixture(deployVyperSuite);
+    const { collateralMint, digitalPayoffPool, tradePool, chainlinkRate } = await loadFixture(deployVyperSuite);
+    tracer.enabled = true;
 
     // digital payoff
-    const digitalPayoff = await DigitalPayoff.deploy(bn(1), true, chainlinkRate.address);
+    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(bn(1), true, chainlinkRate.address);
+    const receiptPayoff = await createPayoffSig.wait(1);
+    const returnEventPayoff = receiptPayoff?.events?.pop();
+    const payoffID = returnEventPayoff?.args ? returnEventPayoff?.args[0] : 0;
 
     const now = Math.floor(new Date().getTime() / 1000);
-    const depositStart = now - A_DAY_IN_SECONDS;
     const depositEnd = now + 2 * A_DAY_IN_SECONDS;
     const settleStart = now + 15 * A_DAY_IN_SECONDS;
 
@@ -54,15 +57,16 @@ describe.only("TradePool", function () {
     console.log(`settleStart: ${settleStart} - 0x${settleStart.toString(16)}`);
     const createTradeSig = await tradePool.createTrade(
       collateralMint.address,
-      digitalPayoff.address,
+      digitalPayoffPool.address,
+      payoffID,
       depositEnd,
       settleStart,
       LONG_REQUIRED_AMOUNT,
       SHORT_REQUIRED_AMOUNT
     );
     const receipt = await createTradeSig.wait(1);
-    const returnEvent = receipt.events.pop();
-    const tradeID = returnEvent.args[0];
+    const returnEvent = receipt?.events?.pop();
+    const tradeID = returnEvent?.args ? returnEvent?.args[0] : 0;
 
     // addr1 deposit as buyer
     await collateralMint.connect(addr1).approve(tradePool.address, LONG_REQUIRED_AMOUNT);
@@ -84,12 +88,10 @@ describe.only("TradePool", function () {
     await time.increaseTo(settleStart + A_DAY_IN_SECONDS);
 
     // owner settle the contract
-    tracer.enabled = true;
     await tradePool.settle(tradeID);
 
     // addr1 claim assets
     await tradePool.connect(addr1).claim(tradeID, BUYER_SIDE);
-    tracer.enabled = false;
     // expect(await tradeID.users(SELLER_SIDE)).to.be.eq(addr2.address);
 
     // addr2 claim assets

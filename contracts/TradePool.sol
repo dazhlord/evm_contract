@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./payoff/IPayoffPlugin.sol";
+import { IPayoffPoolPlugin } from "./payoff/IPayoffPoolPlugin.sol";
 
 
 /// 
@@ -25,17 +25,20 @@ contract TradePool {
     struct Trade {
         // SLOT 0
         IERC20 collateral;
-        uint64 depositEnd;
+        uint88 depositEnd;
         
         // SLOT 1
-        IPayoffPlugin payoff;
-        uint64 settleStart;
+        IPayoffPoolPlugin payoffPool;
+        uint88 settleStart;
         bool settleExecuted;
 
         // SLOT 2
+        uint256 payoffID;
+
+        // SLOT 3
         uint256 longRequiredAmount;
         
-        // SLOT 3
+        // SLOT 4
         uint256 shortRequiredAmount;
     }
 
@@ -61,9 +64,10 @@ contract TradePool {
 
     function createTrade(
         IERC20 _collateral,
-        IPayoffPlugin _payoff,
-        uint64 _depositEnd,
-        uint64 _settleStart,
+        IPayoffPoolPlugin _payoffPool,
+        uint256 _payoffID,
+        uint88 _depositEnd,
+        uint88 _settleStart,
         uint256 _longRequiredAmount,
         uint256 _shortRequiredAmount
         ) public {
@@ -74,13 +78,14 @@ contract TradePool {
         console.log("tradeID: %s", tradeID);
 
         Trade storage t = trades[tradeID];
-        bytes32 slot_0 = (bytes32(bytes8(_depositEnd))   >> 32) | (bytes32(bytes20(address(  _collateral))) >> 96);
-        bytes32 slot_1 = (bytes32(bytes8(_settleStart))  >> 32) | (bytes32(bytes20(address(      _payoff))) >> 96);
+        bytes32 slot_0 = (bytes32(bytes11(_depositEnd))   >> 8) | (bytes32(bytes20(address(  _collateral))) >> 96);
+        bytes32 slot_1 = (bytes32(bytes11(_settleStart))  >> 8) | (bytes32(bytes20(address(  _payoffPool))) >> 96);
         assembly {
             sstore(t.slot, slot_0)
             sstore(add(t.slot, 1), slot_1)
-            sstore(add(t.slot, 2), _longRequiredAmount)
-            sstore(add(t.slot, 3), _shortRequiredAmount)
+            sstore(add(t.slot, 2), _payoffID)
+            sstore(add(t.slot, 3), _longRequiredAmount)
+            sstore(add(t.slot, 4), _shortRequiredAmount)
         }
         emit TradeCreated(tradeID);
     }
@@ -134,7 +139,7 @@ contract TradePool {
         // check if both sides are taken
         require(s.shortUser != address(0) && s.longUser != address(0));
 
-        (uint256 longPnl, uint256 shortPnl) = t.payoff.execute(t.longRequiredAmount, t.shortRequiredAmount);
+        (uint256 longPnl, uint256 shortPnl) = t.payoffPool.execute(t.payoffID, t.longRequiredAmount, t.shortRequiredAmount);
         console.log("+ long pnl: %s", longPnl);
         console.log("+ short pnl: %s", shortPnl);
 
