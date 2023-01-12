@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "hardhat/console.sol";
 
-import { IRatePlugin } from "../rate/IRatePlugin.sol";
+import { IOracleAdapter } from "../rate/IOracleAdapter.sol";
 import { IPayoffPoolPlugin } from "./IPayoffPoolPlugin.sol";
 
 contract DigitalPayoffPool is IPayoffPoolPlugin {
@@ -11,15 +11,16 @@ contract DigitalPayoffPool is IPayoffPoolPlugin {
     event PayoffCreated(uint256);
 
     struct DigitalData {
-        IRatePlugin ratePlugin;
+        IOracleAdapter oracleAdapter;
         bool isCall;
         int256 strike;
+        uint256 oracleID;
     }
 
     mapping(uint256 => DigitalData) public digitalData;
     uint256 private nextIdx = 0;
 
-    function createDigitalPayoff(int256 _strike, bool _isCall, IRatePlugin _ratePlugin) public {
+    function createDigitalPayoff(int256 _strike, bool _isCall, IOracleAdapter _ratePlugin, uint256 _oracleID) public {
         uint256 payoffID = nextIdx++;
         console.log("payoffID: %s", payoffID);
 
@@ -27,7 +28,8 @@ contract DigitalPayoffPool is IPayoffPoolPlugin {
 
         d.strike = _strike;
         d.isCall = _isCall;
-        d.ratePlugin = _ratePlugin;
+        d.oracleAdapter = _ratePlugin;
+        d.oracleID = _oracleID;
 
         emit PayoffCreated(payoffID);
     }
@@ -35,7 +37,7 @@ contract DigitalPayoffPool is IPayoffPoolPlugin {
     function execute(uint256 payoffID, uint256 a, uint256 b) external view returns (uint256 pnlLong, uint256 pnlShort) {
 
         DigitalData memory d = digitalData[payoffID];
-        (int256 newSpot, ) = d.ratePlugin.getLatestPrice();
+        (int256 newSpot, ) = d.oracleAdapter.getLatestPrice(d.oracleID);
         
         int256 strike_ = d.strike;
         bool isCall_ = d.isCall;

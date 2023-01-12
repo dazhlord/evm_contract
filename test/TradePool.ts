@@ -4,6 +4,8 @@ import { ethers, tracer } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { bn, CHAINLINK_AGGREGATORS, A_DAY_IN_SECONDS } from "./utils";
 
+const ORACLE_ID = bn(0);
+
 const TRADES_COUNT = 50;
 const LONG_REQUIRED_AMOUNT = 10;
 const SHORT_REQUIRED_AMOUNT = 100;
@@ -25,8 +27,9 @@ describe("TradePool", function () {
     ]);
 
     // chainilink rate with goerli eth/usd
-    const ChainlinkRate = await ethers.getContractFactory("ChainlinkRate");
-    const chainlinkRate = await ChainlinkRate.deploy(CHAINLINK_AGGREGATORS.GOERLI_AGGREGATOR_ETH_USD);
+    const ChainlinkAdapter = await ethers.getContractFactory("ChainlinkAdapter");
+    const chainlinkAdapter = await ChainlinkAdapter.deploy();
+    await chainlinkAdapter.insertOracle(CHAINLINK_AGGREGATORS.GOERLI_AGGREGATOR_ETH_USD);
 
     const DigitalPayoffPool = await ethers.getContractFactory("DigitalPayoffPool");
     const digitalPayoffPool = await DigitalPayoffPool.deploy();
@@ -34,15 +37,20 @@ describe("TradePool", function () {
     const TradePool = await ethers.getContractFactory("TradePool");
     const tradePool = await TradePool.deploy();
 
-    return { collateralMint, digitalPayoffPool, tradePool, chainlinkRate };
+    return { collateralMint, digitalPayoffPool, tradePool, chainlinkAdapter };
   }
 
   it("standard flow", async function () {
     const [, addr1, addr2] = await ethers.getSigners();
-    const { collateralMint, digitalPayoffPool, tradePool, chainlinkRate } = await loadFixture(deployVyperSuite);
+    const { collateralMint, digitalPayoffPool, tradePool, chainlinkAdapter } = await loadFixture(deployVyperSuite);
 
     // digital payoff
-    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(bn(1), true, chainlinkRate.address);
+    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(
+      bn(1),
+      true,
+      chainlinkAdapter.address,
+      ORACLE_ID
+    );
     const receiptPayoff = await createPayoffSig.wait(1);
     const returnEventPayoff = receiptPayoff?.events?.pop();
     const payoffID = returnEventPayoff?.args ? returnEventPayoff?.args[0] : 0;

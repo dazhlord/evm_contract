@@ -4,23 +4,32 @@ import { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { bn } from "../utils";
 
-const PRICE_AT_DEPLOY = bn(1e3);
+const ORACLE_PRICE = bn(100);
+const ORACLE_PRICE_ID = bn(0);
 
 describe("DigitalPayoff", function () {
   async function deployContract() {
-    const MockRate = await ethers.getContractFactory("MockRate");
-    const mockRate = await MockRate.deploy(PRICE_AT_DEPLOY);
+    const MockOracleAdapter = await ethers.getContractFactory("MockOracleAdapter");
+    const mockOracleAdapter = await MockOracleAdapter.deploy();
+
+    await mockOracleAdapter.setPrice(ORACLE_PRICE_ID, ORACLE_PRICE);
+
     const DigitalPayoffPool = await ethers.getContractFactory("DigitalPayoffPool");
     const digitalPayoffPool = await DigitalPayoffPool.deploy();
 
-    return { digitalPayoffPool, mockRate };
+    return { digitalPayoffPool, mockOracleAdapter };
   }
 
   it("out of the money", async function () {
-    const { digitalPayoffPool, mockRate } = await loadFixture(deployContract);
+    const { digitalPayoffPool, mockOracleAdapter } = await loadFixture(deployContract);
 
-    const strike = PRICE_AT_DEPLOY.add(bn(5));
-    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(strike, true, mockRate.address);
+    const strike = ORACLE_PRICE.add(bn(5));
+    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(
+      strike,
+      true,
+      mockOracleAdapter.address,
+      ORACLE_PRICE_ID
+    );
     const receipt = await createPayoffSig.wait(1);
     const returnEvent = receipt?.events?.pop();
     const payoffID = returnEvent?.args ? returnEvent?.args[0] : 0;
@@ -34,10 +43,15 @@ describe("DigitalPayoff", function () {
   });
 
   it("in the money", async function () {
-    const { digitalPayoffPool, mockRate } = await loadFixture(deployContract);
-    const strike = PRICE_AT_DEPLOY.add(bn(5));
+    const { digitalPayoffPool, mockOracleAdapter } = await loadFixture(deployContract);
+    const strike = ORACLE_PRICE.add(bn(5));
 
-    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(strike, false, mockRate.address);
+    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(
+      strike,
+      false,
+      mockOracleAdapter.address,
+      ORACLE_PRICE_ID
+    );
     const receipt = await createPayoffSig.wait(1);
     const returnEvent = receipt?.events?.pop();
     const payoffID = returnEvent?.args ? returnEvent?.args[0] : 0;
