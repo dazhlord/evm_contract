@@ -50,6 +50,7 @@ const config: HardhatUserConfig = {
     },
     goerli: {
       url: "https://eth-goerli.g.alchemy.com/v2/" + process.env.ALCHEMY_ETH_GOERLI_API_KEY,
+      accounts: [process.env.GOERLI_PRIVATE_KEY!],
     },
   },
   solidity: {
