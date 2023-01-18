@@ -13,7 +13,7 @@ const RouteMain = () => {
       <Route path="/create/oracle/chainlink" element={<CreateChainlinkOracle />} />
       <Route path="/view/oracle/chainlink/:addr" element={<ViewChainlinkOracle />} />
 
-      <Route path="/create/payoff/digital" element={<CreateDigitalPayoff />} />
+      <Route path=" /create/payoff/digital" element={<CreateDigitalPayoff />} />
       <Route path="/view/payoff/digital/:addr" element={<ViewDigitalPayoff />} />
     </Routes>
   );

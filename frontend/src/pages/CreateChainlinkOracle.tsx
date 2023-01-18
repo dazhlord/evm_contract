@@ -1,4 +1,3 @@
-import { Button, TextField } from "@mui/material";
 import { useState } from "react";
 import { usePrepareContractWrite, useContractWrite, useWaitForTransaction } from "wagmi";
 import Layout from "../components/Layout";
@@ -27,19 +26,15 @@ const CreateChainlinkOracle = () => {
 
   return (
     <Layout pageTitle="create chainlink oracle">
-      <TextField
-        label="Chainlink oracle"
-        value={chainlinkOracle}
-        onChange={(e) => setChainlinkOracle(e.target.value)}
-      />
-      <Button
+      <input type="text" value={chainlinkOracle} onChange={(e) => setChainlinkOracle(e.target.value)} />
+      <button
         onClick={(e) => {
           e.preventDefault();
           onCreateButtonClick();
         }}
       >
         {isLoading ? "loading" : "Create"}
-      </Button>
+      </button>
 
       {isSuccess && (
         <div>

@@ -1,7 +1,7 @@
 import React from "react";
 import ConnectWalletCard from "./components/ConnectWalletCard";
 import RouteMain from "./routes";
-import { WagmiConfig, createClient, mainnet, configureChains, goerli } from "wagmi";
+import { WagmiConfig, createClient, configureChains, goerli } from "wagmi";
 
 import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
@@ -9,6 +9,7 @@ import { CoinbaseWalletConnector } from "wagmi/connectors/coinbaseWallet";
 import { InjectedConnector } from "wagmi/connectors/injected";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
+import { Link } from "react-router-dom";
 
 const { chains, provider, webSocketProvider } = configureChains(
   [goerli],
@@ -48,6 +49,7 @@ function App() {
     <WagmiConfig client={client}>
       <div className="App">
         <header className="App-header">
+          <Link to="/">Home</Link>
           <ConnectWalletCard />
           <hr />
           <RouteMain />

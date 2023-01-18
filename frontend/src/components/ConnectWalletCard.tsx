@@ -1,4 +1,3 @@
-import { Button, Typography } from "@mui/material";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import ReactJsonView from "react-json-view";
 import { useEffect, useState } from "react";
@@ -19,14 +18,14 @@ export default function ConnectWalletCard() {
   if (isConnected) {
     return (
       <div>
-        <Typography>WALLET CONNECTED</Typography>
-        <Typography>Address: {address}</Typography>
-        <Typography>
+        <p>
+          WALLET CONNECTED
+          <br />
+          Address: {address}
+          <br />
           Connected via {connector?.name} to chainID: {connectedChainID}
-        </Typography>
-        <Button variant="outlined" onClick={() => disconnect()}>
-          Disconnect
-        </Button>
+        </p>
+        <button onClick={() => disconnect()}>Disconnect</button>
       </div>
     );
   }
@@ -34,17 +33,11 @@ export default function ConnectWalletCard() {
   return (
     <div>
       {connectors.map((connector) => (
-        <Button
-          variant="outlined"
-          sx={{ mx: 1 }}
-          disabled={!connector.ready}
-          key={connector.id}
-          onClick={() => connect({ connector })}
-        >
+        <button disabled={!connector.ready} key={connector.id} onClick={() => connect({ connector })}>
           {connector.name}
           {!connector.ready && " (unsupported)"}
           {isLoading && connector.id === pendingConnector?.id && " (connecting)"}
-        </Button>
+        </button>
       ))}
 
       {error && <div>{error.message}</div>}
