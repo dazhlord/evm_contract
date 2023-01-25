@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { usePrepareContractWrite, useContractWrite, useWaitForTransaction } from "wagmi";
-import Layout from "../components/Layout";
-import PROGRAM_ID from "../config/addresses.json";
-import { ChainlinkAdapter__factory } from "../config/typechain-types";
+import Layout from "../../components/Layout";
+import PROGRAM_ID from "../../config/addresses.json";
+import { ChainlinkAdapter__factory } from "../../config/typechain-types";
 import { useDebounce } from "use-debounce";
 
 const CreateChainlinkOracle = () => {
