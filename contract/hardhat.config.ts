@@ -50,7 +50,13 @@ const config: HardhatUserConfig = {
     },
     goerli: {
       url: "https://eth-goerli.g.alchemy.com/v2/" + process.env.ALCHEMY_ETH_GOERLI_API_KEY,
-      accounts: [process.env.GOERLI_PRIVATE_KEY!],
+      accounts: [process.env.ACCOUNT_PVT_KEY!],
+    },
+    bscTestnet: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      chainId: 97,
+      gasPrice: 20000000000,
+      accounts: [process.env.ACCOUNT_PVT_KEY!],
     },
   },
   solidity: {
