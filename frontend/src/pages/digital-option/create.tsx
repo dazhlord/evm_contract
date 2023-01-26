@@ -42,7 +42,7 @@ const CreateChainlinkOracle = () => {
 
       <div>
         <label htmlFor="isCall">isCall</label>
-        <input id="isCall" type="checkbox" checked={isCall} onChange={(e) => setIsCall(Boolean(e.target.value))} />
+        <input id="isCall" type="checkbox" checked={isCall} onChange={() => setIsCall(!isCall)} />
       </div>
 
       <div>
