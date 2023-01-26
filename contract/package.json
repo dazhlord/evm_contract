@@ -6,7 +6,8 @@
     "coverage": "npx hardhat --emoji coverage",
     "compile": "npx hardhat --emoji compile",
     "gas-report": "ENABLE_GAS_REPORT=true npx hardhat test",
-    "test": "npx hardhat --emoji test"
+    "test": "npx hardhat --emoji test",
+    "deploy": "npx hardhat run --network testnet scripts/deploy.js"
   },
   "license": "MIT",
   "devDependencies": {

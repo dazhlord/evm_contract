@@ -53,7 +53,7 @@ const config: HardhatUserConfig = {
       accounts: [process.env.ACCOUNT_PVT_KEY!],
     },
     bscTestnet: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      url: process.env.RPC_BSC_TESTNET,
       chainId: 97,
       gasPrice: 20000000000,
       accounts: [process.env.ACCOUNT_PVT_KEY!],
