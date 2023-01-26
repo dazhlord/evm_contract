@@ -1,19 +1,26 @@
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import ReactJsonView from "react-json-view";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAppStore } from "../store/useAppStore";
+import { useSelectedChain } from "../hooks/useSelectedChain";
 
 export default function ConnectWalletCard() {
   const { address, connector, isConnected } = useAccount();
   const { connect, connectors, error, isLoading, pendingConnector } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const [connectedChainID, setConnectedChainID] = useState(0);
+  const { setSelectedChainID } = useAppStore();
+  const chainMetadata = useSelectedChain();
+
   useEffect(() => {
-    if (connector)
-      connector.getChainId().then((chainID) => {
-        setConnectedChainID(chainID);
-      });
-  }, [connector]);
+    try {
+      if (connector)
+        connector.getChainId().then((chainID) => {
+          setSelectedChainID(chainID);
+        });
+    } catch (error) {
+      console.error(error);
+    }
+  }, [connector, setSelectedChainID]);
 
   if (isConnected) {
     return (
@@ -23,7 +30,8 @@ export default function ConnectWalletCard() {
           <br />
           Address: {address}
           <br />
-          Connected via {connector?.name} to chainID: {connectedChainID}
+          Connected via {connector?.name} ({connector?.id}) to chainID: {chainMetadata?.chainID} (
+          {chainMetadata?.description})
         </p>
         <button onClick={() => disconnect()}>Disconnect</button>
       </div>

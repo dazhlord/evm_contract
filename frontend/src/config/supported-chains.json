@@ -1,0 +1,24 @@
+[
+  {
+    "chainID": 5,
+    "description": "goerli",
+    "programs": {
+      "chainlinkAdapter": "7170c47E060A636444Fe640e3b2cC5f8C4D19308",
+      "digitalPayoffPool": "CA976B2Ff9554Db25E3f064A9A6Ca7CAf25E6E23",
+      "tradePool": "9773f1aF15750216a17Bf8c689Bb0b95a5122D76"
+    },
+    "defaultChainlinkOracle": "D4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+    "defaultCollateral": "07865c6E87B9F70255377e024ace6630C1Eaa37F"
+  },
+  {
+    "chainID": 97,
+    "description": "BSC testnet",
+    "programs": {
+      "chainlinkAdapter": "78B9aeBD84854e9d0989343599B248d72F8D0902",
+      "digitalPayoffPool": "b3A70C05F3C69b5678eD039c98e061e68A2E676c",
+      "tradePool": "0c8DB4210d2e25B33772DA81baec7810503AD851"
+    },
+    "defaultChainlinkOracle": "2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+    "defaultCollateral": "bb3963512b9c0F28eFb4a3dcB1e0274A87d159E7"
+  }
+]

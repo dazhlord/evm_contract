@@ -1,21 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePrepareContractWrite, useContractWrite, useWaitForTransaction } from "wagmi";
 import Layout from "../../components/Layout";
-import PROGRAM_ID from "../../config/addresses.json";
 import { DigitalPayoffPool__factory } from "../../config/typechain-types";
-import { useDebounce } from "use-debounce";
 import { bn } from "../../utils/bigNumber";
+import { useSelectedChain } from "../../hooks/useSelectedChain";
 
 const CreateChainlinkOracle = () => {
+  const chainMetadata = useSelectedChain();
+
   const [strike, setStrike] = useState(110);
   const [isCall, setIsCall] = useState(true);
-  const [oraclePool, setOraclePool] = useState(`0x${PROGRAM_ID.chainlinkAdapter}`);
+  const [oraclePool, setOraclePool] = useState("");
+  useEffect(() => {
+    if (chainMetadata) setOraclePool(`0x${chainMetadata?.programs.chainlinkAdapter}`);
+  }, [chainMetadata]);
+
   const [oracleIdx, setOracleIdx] = useState(0);
 
-  //   const debouncedChainlinkOracle = useDebounce(chainlinkOracle, 500);
-
   const { config } = usePrepareContractWrite({
-    address: `0x${PROGRAM_ID.digitalPayoffPool}`,
+    address: `0x${chainMetadata?.programs.digitalPayoffPool}`,
     abi: DigitalPayoffPool__factory.abi,
     functionName: "createDigitalPayoff",
     args: [bn(strike), isCall, oraclePool as `0x${string}`, bn(oracleIdx)],

@@ -1,13 +1,17 @@
+import { isAddress } from "ethers/lib/utils.js";
 import moment from "moment";
 import { useParams } from "react-router-dom";
-import { useContractRead } from "wagmi";
+import { useAccount, useContractRead } from "wagmi";
+import ClaimButton from "../../components/ClaimButton";
 import DepositButton from "../../components/DepositButton";
 import Layout from "../../components/Layout";
+import SettleButton from "../../components/SettleButton";
 import { TradePool__factory } from "../../config/typechain-types";
 import { bn } from "../../utils/bigNumber";
 
 const ViewTrade = () => {
   let { addr, id } = useParams();
+  const { address } = useAccount();
 
   const tradeRead = useContractRead({
     address: addr as `0x${string}`,
@@ -33,22 +37,22 @@ const ViewTrade = () => {
           "loading trade data"
         ) : (
           <ul>
-            <li>collateral: {tradeRead.data?.[0]}</li>
-            <li>payoff pool: {tradeRead.data?.[2]}</li>
+            <li>collateral: {tradeRead.data?.collateral}</li>
+            <li>payoff pool: {tradeRead.data?.payoffPool}</li>
             <li>
-              depositEnd: {tradeRead.data?.[1].toNumber()}
+              depositEnd: {tradeRead.data?.depositEnd.toNumber()}
               {" - "}
-              {tradeRead.data && moment(tradeRead.data[1].toNumber()).toString()}
+              {tradeRead.data && moment(tradeRead.data?.depositEnd.toNumber() * 1000).toString()}
             </li>
             <li>
-              settleStart: {tradeRead.data?.[3].toNumber()}
+              settleStart: {tradeRead.data?.settleStart.toNumber()}
               {" - "}
-              {tradeRead.data && moment(tradeRead.data[3].toNumber()).toString()}
+              {tradeRead.data && moment(tradeRead.data?.settleStart.toNumber() * 1000).toString()}
             </li>
-            <li>settleExecuted: {tradeRead.data?.[4] ? "true" : "false"}</li>
-            <li>payoffID: {tradeRead.data?.[5].toNumber()}</li>
-            <li>long required amount: {tradeRead.data?.[6].toNumber()}</li>
-            <li>short required amount: {tradeRead.data?.[7].toNumber()}</li>
+            <li>settleExecuted: {tradeRead.data?.settleExecuted ? "true" : "false"}</li>
+            <li>payoffID: {tradeRead.data?.payoffID.toNumber()}</li>
+            <li>long required amount: {tradeRead.data?.longRequiredAmount.toNumber()}</li>
+            <li>short required amount: {tradeRead.data?.shortRequiredAmount.toNumber()}</li>
           </ul>
         )}
 
@@ -58,30 +62,58 @@ const ViewTrade = () => {
           "loading settle data"
         ) : (
           <ul>
-            <li>long user: {settleDataRead.data?.[0]}</li>
-            <li>short user: {settleDataRead.data?.[1]}</li>
-            <li>pnlLong: {settleDataRead.data?.[2].toNumber()}</li>
-            <li>pnlShort: {settleDataRead.data?.[3].toNumber()}</li>
+            <li>long user: {settleDataRead.data?.longUser}</li>
+            <li>short user: {settleDataRead.data?.shortUser}</li>
+            <li>pnlLong: {settleDataRead.data?.longPnl.toNumber()}</li>
+            <li>pnlShort: {settleDataRead.data?.shortPnl.toNumber()}</li>
           </ul>
         )}
         <hr />
 
-        {addr && id && (
+        {tradeRead.data && addr && id && (
           <DepositButton
             addr={addr}
             id={Number(id)}
             isLong={true}
             collateral={tradeRead.data![0]}
             amount={tradeRead.data![6]}
+            txEnabled={!!(settleDataRead.data && !isAddress(settleDataRead.data!.longUser.toString()))}
           />
         )}
-        {addr && id && (
+        {tradeRead.data && addr && id && (
           <DepositButton
             addr={addr}
             id={Number(id)}
             isLong={false}
             collateral={tradeRead.data![0]}
-            amount={tradeRead.data![1]}
+            amount={tradeRead.data![7]}
+            txEnabled={!!(settleDataRead.data && !isAddress(settleDataRead.data!.shortUser.toString()))}
+          />
+        )}
+
+        {tradeRead.data && addr && id && (
+          <SettleButton
+            addr={addr}
+            id={Number(id)}
+            txEnabled={!tradeRead.data!.settleExecuted && Date.now() / 1000 > tradeRead.data!.settleStart.toNumber()}
+          />
+        )}
+
+        {tradeRead.data && settleDataRead.data && addr && id && (
+          <ClaimButton
+            addr={addr}
+            id={Number(id)}
+            isLong={true}
+            txEnabled={settleDataRead.data!.longUser === address}
+          />
+        )}
+
+        {tradeRead.data && settleDataRead.data && addr && id && (
+          <ClaimButton
+            addr={addr}
+            id={Number(id)}
+            isLong={false}
+            txEnabled={settleDataRead.data!.shortUser === address}
           />
         )}
       </>

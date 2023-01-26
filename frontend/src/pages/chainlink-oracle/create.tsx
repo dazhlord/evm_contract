@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePrepareContractWrite, useContractWrite, useWaitForTransaction } from "wagmi";
 import Layout from "../../components/Layout";
-import PROGRAM_ID from "../../config/addresses.json";
 import { ChainlinkAdapter__factory } from "../../config/typechain-types";
-import { useDebounce } from "use-debounce";
+import { useSelectedChain } from "../../hooks/useSelectedChain";
 
 const CreateChainlinkOracle = () => {
-  const [chainlinkOracle, setChainlinkOracle] = useState("D4a33860578De61DBAbDc8BFdb98FD742fA7028e");
-  const debouncedChainlinkOracle = useDebounce(chainlinkOracle, 500);
+  const chainMetadata = useSelectedChain();
+  const [chainlinkOracle, setChainlinkOracle] = useState<string>("");
+  useEffect(() => {
+    if (chainMetadata) setChainlinkOracle(chainMetadata.defaultChainlinkOracle);
+  }, [chainMetadata]);
+
+  const chainlinkAdapterAddress = chainMetadata?.programs.chainlinkAdapter;
 
   const { config } = usePrepareContractWrite({
-    address: `0x${PROGRAM_ID.chainlinkAdapter}`,
+    address: `0x${chainlinkAdapterAddress}`,
+    chainId: chainMetadata?.chainID,
     abi: ChainlinkAdapter__factory.abi,
     functionName: "insertOracle",
-    args: [`0x${debouncedChainlinkOracle}`],
+    args: [`0x${chainlinkOracle}`],
   });
+
   const { data, write } = useContractWrite(config);
   const { isLoading, isSuccess } = useWaitForTransaction({
     hash: data?.hash,
@@ -32,6 +38,7 @@ const CreateChainlinkOracle = () => {
           e.preventDefault();
           onCreateButtonClick();
         }}
+        disabled={!write}
       >
         {isLoading ? "loading" : "Create"}
       </button>
@@ -42,6 +49,9 @@ const CreateChainlinkOracle = () => {
           {data?.hash}
         </div>
       )}
+      <br />
+      <br />
+      <a href="https://docs.chain.link/data-feeds/price-feeds/addresses">chainlink list</a>
     </Layout>
   );
 };

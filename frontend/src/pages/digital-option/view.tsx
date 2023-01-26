@@ -1,10 +1,8 @@
-import { BigNumber } from "ethers";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useContractRead } from "wagmi";
 import Layout from "../../components/Layout";
-import PROGRAM_ID from "../../config/addresses.json";
-import { ChainlinkAdapter__factory, DigitalPayoffPool__factory } from "../../config/typechain-types";
+import { DigitalPayoffPool__factory } from "../../config/typechain-types";
 import { bn } from "../../utils/bigNumber";
 
 const DigitalPayoffEntry = ({ poolAddr, idx }: { poolAddr: `0x${string}`; idx: number }) => {

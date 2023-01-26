@@ -9,14 +9,16 @@ type DepositButtonInputProps = {
   collateral: string;
   isLong: boolean;
   amount: BigNumber;
+  txEnabled: boolean;
 };
 
-const DepositButton = ({ addr, id, isLong, collateral, amount }: DepositButtonInputProps) => {
+const DepositButton = ({ addr, id, isLong, collateral, amount, txEnabled }: DepositButtonInputProps) => {
   const { config: approveConfig, error: approveConfigError } = usePrepareContractWrite({
     address: collateral as `0x${string}`,
     abi: IERC20__factory.abi,
     functionName: "approve",
     args: [addr as `0x${string}`, amount],
+    enabled: txEnabled,
   });
 
   const { config: depositConfig, error: depositConfigError } = usePrepareContractWrite({
@@ -24,6 +26,7 @@ const DepositButton = ({ addr, id, isLong, collateral, amount }: DepositButtonIn
     abi: TradePool__factory.abi,
     functionName: "deposit",
     args: [bn(id), isLong ? 0 : 1],
+    enabled: txEnabled,
   });
 
   const { data: dataApprove, write: writeApprove } = useContractWrite(approveConfig);
@@ -60,7 +63,9 @@ const DepositButton = ({ addr, id, isLong, collateral, amount }: DepositButtonIn
         approve
       </button>
       <button onClick={() => onDepositButtonClick()} disabled={!!depositConfigError}>
-        {isLong ? "buy" : "sell"}
+        <>
+          {isLong ? "buy " : "sell"} {amount.toNumber()}
+        </>
       </button>
     </div>
   );

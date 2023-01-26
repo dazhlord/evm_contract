@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { usePrepareContractWrite, useContractWrite, useWaitForTransaction } from "wagmi";
 import Layout from "../../components/Layout";
-import PROGRAM_ID from "../../config/addresses.json";
-import { DigitalPayoffPool__factory, TradePool__factory } from "../../config/typechain-types";
-import { useDebounce } from "use-debounce";
+import { TradePool__factory } from "../../config/typechain-types";
 import { bn } from "../../utils/bigNumber";
 import moment from "moment";
+import { useSelectedChain } from "../../hooks/useSelectedChain";
 
 const CreateTrade = () => {
-  const [collateral, setCollateral] = useState(`0x07865c6E87B9F70255377e024ace6630C1Eaa37F`);
-  const [payoffPool, setPayoffPool] = useState(`0x${PROGRAM_ID.digitalPayoffPool}`);
+  const chainMetadata = useSelectedChain();
+
+  const [collateral, setCollateral] = useState("");
+  const [payoffPool, setPayoffPool] = useState("");
+  useEffect(() => {
+    if (chainMetadata) setPayoffPool(`0x${chainMetadata?.programs.digitalPayoffPool}`);
+    if (chainMetadata) setCollateral(`0x${chainMetadata?.defaultCollateral}`);
+  }, [chainMetadata]);
+
   const [payoffIdx, setPayoffIdx] = useState(0);
   const [depositEnd, setDepositEnd] = useState(0);
   const [settleStart, setSettleStart] = useState(0);
@@ -17,12 +23,12 @@ const CreateTrade = () => {
   const [shortRequiredAmount, setShortRequiredAmount] = useState(10);
 
   useEffect(() => {
-    setDepositEnd(moment().add(10, "minutes").toDate().getTime());
-    setSettleStart(moment().add(15, "minutes").toDate().getTime());
+    setDepositEnd(Math.round(moment().add(12, "minutes").toDate().getTime() / 1000));
+    setSettleStart(Math.round(moment().add(15, "minutes").toDate().getTime() / 1000));
   }, []);
 
   const { config } = usePrepareContractWrite({
-    address: `0x${PROGRAM_ID.tradePool}`,
+    address: `0x${chainMetadata?.programs.tradePool}`,
     abi: TradePool__factory.abi,
     functionName: "createTrade",
     args: [
@@ -41,7 +47,7 @@ const CreateTrade = () => {
     hash: data?.hash,
   });
 
-  const onCreateButtonClick = () => {
+  const onCreateButtonClick = async () => {
     write?.();
   };
 
@@ -55,9 +61,6 @@ const CreateTrade = () => {
       <div>
         <label htmlFor="payoffPool">payoffPool</label>
         <input id="payoffPool" type="text" value={payoffPool} onChange={(e) => setPayoffPool(e.target.value)} />
-      </div>
-
-      <div>
         <label htmlFor="payoffIdx">payoffIdx</label>
         <input id="payoffIdx" type="number" value={payoffIdx} onChange={(e) => setPayoffIdx(Number(e.target.value))} />
       </div>
@@ -69,9 +72,9 @@ const CreateTrade = () => {
         { id: "shortRequiredAmount", v: shortRequiredAmount, c: setShortRequiredAmount },
       ].map((cc) => (
         <div key={cc.id}>
-          <label htmlFor={cc.id}>{cc.id}</label>
+          <label htmlFor={cc.id}>{cc.id}: </label>
           <input id={cc.id} type="number" value={cc.v} onChange={(e) => cc.c(Number(e.target.value))} />
-          {cc.isMoment && <span>{moment(cc.v).toString()}</span>}
+          {cc.isMoment && <span> - {moment(cc.v * 1000).toString()}</span>}
         </div>
       ))}
 
@@ -80,7 +83,7 @@ const CreateTrade = () => {
           e.preventDefault();
           onCreateButtonClick();
         }}
-        disabled={isLoading}
+        disabled={!write || isLoading}
       >
         {isLoading ? "loading" : "Create"}
       </button>
