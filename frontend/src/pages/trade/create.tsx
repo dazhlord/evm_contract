@@ -37,8 +37,8 @@ const CreateTrade = () => {
       bn(payoffIdx),
       bn(depositEnd),
       bn(settleStart),
-      bn(longRequiredAmount),
-      bn(shortRequiredAmount),
+      bn(longRequiredAmount).mul(bn(10).pow(18)),
+      bn(shortRequiredAmount).mul(bn(10).pow(18)),
     ],
   });
 
