@@ -1,6 +1,7 @@
 import { BigNumber } from "ethers";
 import { usePrepareContractWrite, useContractWrite, useWaitForTransaction } from "wagmi";
-import { IERC20__factory, TradePool__factory } from "../config/typechain-types";
+import { TradePool__factory } from "../config/typechain-types";
+import { erc20ABI } from "@wagmi/core";
 import { bn } from "../utils/bigNumber";
 
 type DepositButtonInputProps = {
@@ -15,7 +16,7 @@ type DepositButtonInputProps = {
 const DepositButton = ({ addr, id, isLong, collateral, amount, txEnabled }: DepositButtonInputProps) => {
   const { config: approveConfig, error: approveConfigError } = usePrepareContractWrite({
     address: collateral as `0x${string}`,
-    abi: IERC20__factory.abi,
+    abi: erc20ABI,
     functionName: "approve",
     args: [addr as `0x${string}`, amount],
     enabled: txEnabled,
