@@ -9,19 +9,13 @@ import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 import { Link } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
+import { rpc } from "./utils/rpcHelper";
 
 const { chains, provider, webSocketProvider } = configureChains(
   [bscTestnet, goerli],
   [
-    alchemyProvider({ apiKey: "-5Sy6N4V-1uuMt-tD3ZIYoDAj0aWE1lH" }),
     jsonRpcProvider({
-      rpc: (chain) => {
-        if (chain.id === 97)
-          return {
-            http: "https://maximum-holy-cherry.bsc-testnet.quiknode.pro/22999945011353e7dea376ecfac9e26b6f6efb5c/",
-          };
-        return { http: "" };
-      },
+      rpc,
     }),
     publicProvider(),
   ]
