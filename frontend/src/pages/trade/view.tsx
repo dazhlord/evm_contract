@@ -51,8 +51,8 @@ const ViewTrade = () => {
             </li>
             <li>settleExecuted: {tradeRead.data?.settleExecuted ? "true" : "false"}</li>
             <li>payoffID: {tradeRead.data?.payoffID.toNumber()}</li>
-            <li>long required amount: {tradeRead.data?.longRequiredAmount.toNumber()}</li>
-            <li>short required amount: {tradeRead.data?.shortRequiredAmount.toNumber()}</li>
+            <li>long required amount: {tradeRead.data?.longRequiredAmount.div(bn(10).pow(18)).toString()}</li>
+            <li>short required amount: {tradeRead.data?.shortRequiredAmount.div(bn(10).pow(18)).toString()}</li>
           </ul>
         )}
 
@@ -64,8 +64,8 @@ const ViewTrade = () => {
           <ul>
             <li>long user: {settleDataRead.data?.longUser}</li>
             <li>short user: {settleDataRead.data?.shortUser}</li>
-            <li>pnlLong: {settleDataRead.data?.longPnl.toNumber()}</li>
-            <li>pnlShort: {settleDataRead.data?.shortPnl.toNumber()}</li>
+            <li>pnlLong: {settleDataRead.data?.longPnl.toString()}</li>
+            <li>pnlShort: {settleDataRead.data?.shortPnl.toString()}</li>
           </ul>
         )}
         <hr />

@@ -65,7 +65,7 @@ const DepositButton = ({ addr, id, isLong, collateral, amount, txEnabled }: Depo
       </button>
       <button onClick={() => onDepositButtonClick()} disabled={!!depositConfigError}>
         <>
-          {isLong ? "buy " : "sell"} {amount.toNumber()}
+          {isLong ? "buy " : "sell"} {amount.div(bn(10).pow(18)).toString()}
         </>
       </button>
     </div>
