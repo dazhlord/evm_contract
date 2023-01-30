@@ -1,4 +1,3 @@
-import { isAddress } from "ethers/lib/utils.js";
 import moment from "moment";
 import { useParams } from "react-router-dom";
 import { useAccount, useContractRead } from "wagmi";
@@ -26,6 +25,9 @@ const ViewTrade = () => {
     functionName: "settleData",
     args: [bn(Number(id))],
   });
+
+  const buyTxEnabled = settleDataRead.data!.longUser === "0x0000000000000000000000000000000000000000";
+  const sellTxEnabled = settleDataRead.data!.shortUser === "0x0000000000000000000000000000000000000000";
 
   return (
     <Layout>
@@ -75,9 +77,9 @@ const ViewTrade = () => {
             addr={addr}
             id={Number(id)}
             isLong={true}
-            collateral={tradeRead.data![0]}
-            amount={tradeRead.data![6]}
-            txEnabled={!!(settleDataRead.data && !isAddress(settleDataRead.data!.longUser.toString()))}
+            collateral={tradeRead.data!.collateral}
+            amount={tradeRead.data!.longRequiredAmount}
+            txEnabled={buyTxEnabled}
           />
         )}
         {tradeRead.data && addr && id && (
@@ -85,9 +87,9 @@ const ViewTrade = () => {
             addr={addr}
             id={Number(id)}
             isLong={false}
-            collateral={tradeRead.data![0]}
-            amount={tradeRead.data![7]}
-            txEnabled={!!(settleDataRead.data && !isAddress(settleDataRead.data!.shortUser.toString()))}
+            collateral={tradeRead.data!.collateral}
+            amount={tradeRead.data!.shortRequiredAmount}
+            txEnabled={sellTxEnabled}
           />
         )}
 
