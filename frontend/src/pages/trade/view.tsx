@@ -26,8 +26,10 @@ const ViewTrade = () => {
     args: [bn(Number(id))],
   });
 
-  const buyTxEnabled = settleDataRead.data!.longUser === "0x0000000000000000000000000000000000000000";
-  const sellTxEnabled = settleDataRead.data!.shortUser === "0x0000000000000000000000000000000000000000";
+  const buyTxEnabled =
+    !!settleDataRead.data && settleDataRead.data.longUser === "0x0000000000000000000000000000000000000000";
+  const sellTxEnabled =
+    !!settleDataRead.data && settleDataRead.data.shortUser === "0x0000000000000000000000000000000000000000";
 
   return (
     <Layout>
