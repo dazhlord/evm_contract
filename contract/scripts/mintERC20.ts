@@ -10,10 +10,10 @@ async function main() {
   console.log("default signer balance:", (await deployer.getBalance()).toString());
 
   const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
-  const erc20Mock = ERC20Mock.attach("0xbb3963512b9c0F28eFb4a3dcB1e0274A87d159E7");
+  const erc20Mock = ERC20Mock.attach("0x3964f8BC37C99E7089ba11044b3489CB5777607c");
 
-  const amount = BigNumber.from(1000).mul(BigNumber.from(10).pow(18));
-  const destWallets = ["0x02548256453D61E8Beb31013ebE8e5ddd412cBc6", "0xf588c72DA4114243B3E47A0E052F28cC44303a03"];
+  const amount = BigNumber.from(10000).mul(BigNumber.from(10).pow(18));
+  const destWallets = ["0x81a2AEb03fe1D9d48E0dEdA3F6Ea109d73b6d4FB", "0xF89BEf4Bd45aacd1e53CC1015e1A83b14a2b7Ee5"];
   for (const destWallet of destWallets) {
     console.log("amount: " + amount);
     console.log("mint addr: " + erc20Mock.address);
