@@ -45,17 +45,21 @@ const config: HardhatUserConfig = {
     },
     hardhat: {
       forking: {
-        url: "https://eth-goerli.g.alchemy.com/v2/" + process.env.ALCHEMY_ETH_GOERLI_API_KEY,
+        url: process.env.RPC_GOERLI!,
       },
     },
     goerli: {
-      url: "https://eth-goerli.g.alchemy.com/v2/" + process.env.ALCHEMY_ETH_GOERLI_API_KEY,
+      url: process.env.RPC_GOERLI,
       accounts: [process.env.ACCOUNT_PVT_KEY!],
     },
     bscTestnet: {
       url: process.env.RPC_BSC_TESTNET,
       chainId: 97,
-      gasPrice: 20000000000,
+      accounts: [process.env.ACCOUNT_PVT_KEY!],
+    },
+    arbGoerli: {
+      url: process.env.RPC_ARB_GOERLI,
+      chainId: 421613,
       accounts: [process.env.ACCOUNT_PVT_KEY!],
     },
   },
