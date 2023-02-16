@@ -6,7 +6,7 @@ env:
   FOUNDRY_PROFILE: ci
 
 jobs:
-  foundry_test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,18 +28,5 @@ jobs:
           forge --version
           forge build --sizes
 
-      - name: Run Forge test
-        run: yarn test:forge
-
-  hh_test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: "yarn"
-      - run: yarn
-      - run: yarn test:hh
+      - name: Run tests
+        run: yarn test
