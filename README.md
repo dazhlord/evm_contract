@@ -1,4 +1,4 @@
-# VYPER SOLIDITY POC
+# EVM contracts
 
 install dependencies:
 
