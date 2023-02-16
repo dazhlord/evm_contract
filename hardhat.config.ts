@@ -10,6 +10,10 @@ import "hardhat-storage-layout";
 
 require("dotenv").config();
 
+const PUBLIC_RPC_GOERLI = "https://eth-goerli.public.blastapi.io";
+const PUBLIC_RPC_BSC_TESTNET = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+const PUBLIC_RPC_ARB_GOERLI = "https://endpoints.omniatech.io/v1/arbitrum/goerli/public";
+
 const GAS_REPORTER_CONFIG = {
   ETH_ETHERSCAN: {
     token: "ETH",
@@ -46,22 +50,22 @@ const config: HardhatUserConfig = {
     },
     hardhat: {
       forking: {
-        url: process.env.RPC_GOERLI!,
+        url: process.env.RPC_GOERLI ?? PUBLIC_RPC_GOERLI,
       },
     },
     goerli: {
-      url: process.env.RPC_GOERLI,
-      accounts: [process.env.ACCOUNT_PVT_KEY!],
+      url: process.env.RPC_GOERLI ?? PUBLIC_RPC_GOERLI,
+      accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
     },
     bscTestnet: {
-      url: process.env.RPC_BSC_TESTNET,
+      url: process.env.RPC_BSC_TESTNET ?? PUBLIC_RPC_BSC_TESTNET,
       chainId: 97,
-      accounts: [process.env.ACCOUNT_PVT_KEY!],
+      accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
     },
     arbGoerli: {
-      url: process.env.RPC_ARB_GOERLI,
+      url: process.env.RPC_ARB_GOERLI ?? PUBLIC_RPC_ARB_GOERLI,
       chainId: 421613,
-      accounts: [process.env.ACCOUNT_PVT_KEY!],
+      accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
     },
   },
   solidity: {

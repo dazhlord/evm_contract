@@ -1,0 +1,34 @@
+name: Test
+
+on: push
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  foundry_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+
+      - name: Run Forge test
+        run: yarn test:forge
+  hh_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Run Hardhat test
+        run: yarn test:hh
