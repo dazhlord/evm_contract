@@ -23,9 +23,10 @@ yarn-debug.log*
 yarn-error.log*
 
 typechain-types/
-cache/
+cache_hh/
 cache_forge/
-artifacts/
+artifacts_hh/
+artifacts_forge/
 out/
 
 .env

@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "coverage": "npx hardhat --emoji coverage",
-    "compile": "npx hardhat --emoji compile",
+    "coverage:hh": "npx hardhat --emoji coverage",
+    "compile:hh": "npx hardhat --emoji compile",
+    "compile:forge": "forge build",
     "gas-report:hh": "ENABLE_GAS_REPORT=true npx hardhat test",
     "gas-report:forge": "forge test --gas-report",
     "test:hh": "npx hardhat --emoji test",

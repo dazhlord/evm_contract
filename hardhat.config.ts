@@ -44,6 +44,11 @@ const GAS_REPORTER_CONFIG = {
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
+  paths: {
+    artifacts: "artifacts_hh",
+    cache: "cache_hh",
+    tests: "test/hh",
+  },
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
