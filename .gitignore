@@ -29,5 +29,3 @@ artifacts/
 out/
 
 .env
-
-lib/forge-std
