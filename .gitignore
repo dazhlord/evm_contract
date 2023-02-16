@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+typechain-types/
+cache/
+cache_forge/
+artifacts/
+out/
+
+.env
+
+lib/forge-std
