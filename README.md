@@ -1,3 +1,7 @@
 # VYPER SOLIDITY POC
 
-WIP
+install dependencies:
+
+```shell
+git submodule update --init --recursive
+```
