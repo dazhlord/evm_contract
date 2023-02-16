@@ -13,6 +13,13 @@ jobs:
         with:
           submodules: recursive
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "yarn"
+
+      - run: yarn
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
@@ -23,6 +30,7 @@ jobs:
 
       - name: Run Forge test
         run: yarn test:forge
+
   hh_test:
     runs-on: ubuntu-latest
     steps:
