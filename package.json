@@ -7,7 +7,9 @@
     "compile": "npx hardhat --emoji compile",
     "gas-report:hh": "ENABLE_GAS_REPORT=true npx hardhat test",
     "gas-report:forge": "forge test --gas-report",
-    "test": "forge test && npx hardhat --emoji test",
+    "test:hh": "npx hardhat --emoji test",
+    "test:forge": "forge test",
+    "test": "yarn test:forge && yarn test:hh",
     "deploy": "npx hardhat run --network testnet scripts/deploy.js"
   },
   "license": "MIT",
