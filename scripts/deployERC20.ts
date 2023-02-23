@@ -1,7 +1,5 @@
-import hre, { ethers } from "hardhat";
-import { bn, A_DAY_IN_SECONDS, CHAINLINK_AGGREGATORS } from "../test/utils";
+import { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import ethernal from "hardhat-ethernal";
 import { BigNumber } from "ethers";
 
 async function main() {
@@ -11,8 +9,8 @@ async function main() {
 
   const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
   const erc20Mock = await ERC20Mock.deploy(
-    "Vyper USD",
-    "vypUSD",
+    "Smoothie USD",
+    "smoothieUSD",
     deployer.address,
     BigNumber.from(10000).mul(BigNumber.from(10).pow(18))
   );

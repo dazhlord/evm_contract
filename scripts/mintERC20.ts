@@ -1,7 +1,5 @@
-import hre, { ethers } from "hardhat";
-import { bn, A_DAY_IN_SECONDS, CHAINLINK_AGGREGATORS } from "../test/utils";
+import { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import ethernal from "hardhat-ethernal";
 import { BigNumber } from "ethers";
 
 async function main() {
