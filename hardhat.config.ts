@@ -11,6 +11,7 @@ import "hardhat-storage-layout";
 require("dotenv").config();
 
 const PUBLIC_RPC_GOERLI = "https://eth-goerli.public.blastapi.io";
+const PUBLIC_RPC_BSC_MAINNET = "https://bsc-dataseed1.binance.org/";
 const PUBLIC_RPC_BSC_TESTNET = "https://data-seed-prebsc-1-s1.binance.org:8545/";
 const PUBLIC_RPC_ARB_GOERLI = "https://endpoints.omniatech.io/v1/arbitrum/goerli/public";
 
@@ -60,6 +61,11 @@ const config: HardhatUserConfig = {
     },
     goerli: {
       url: process.env.RPC_GOERLI ?? PUBLIC_RPC_GOERLI,
+      accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
+    },
+    bscMainnet: {
+      url: process.env.RPC_BSC_MAINNET ?? PUBLIC_RPC_BSC_MAINNET,
+      chainId: 56,
       accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
     },
     bscTestnet: {
