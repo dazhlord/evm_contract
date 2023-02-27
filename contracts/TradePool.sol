@@ -73,6 +73,20 @@ contract TradePool is Pausable, Ownable {
         _unpause();
     }
 
+    function createAndDeposit(
+        IERC20 _collateral,
+        IPayoffPoolPlugin _payoffPool,
+        uint256 _payoffID,
+        uint88 _depositEnd,
+        uint88 _settleStart,
+        uint256 _longRequiredAmount,
+        uint256 _shortRequiredAmount,
+        Sides _side
+    ) external whenNotPaused {
+        createTrade(_collateral, _payoffPool, _payoffID, _depositEnd, _settleStart, _longRequiredAmount, _shortRequiredAmount);
+        deposit(nextIdx-1, _side);
+    }
+
     function createTrade(
         IERC20 _collateral,
         IPayoffPoolPlugin _payoffPool,
@@ -100,7 +114,7 @@ contract TradePool is Pausable, Ownable {
     }
 
     // deposit
-    function deposit(uint256 _tradeID, Sides _side) external whenNotPaused {
+    function deposit(uint256 _tradeID, Sides _side) public whenNotPaused {
         Trade memory t = trades[_tradeID];
         SettleData storage s = settleData[_tradeID];
 

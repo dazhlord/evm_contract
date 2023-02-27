@@ -210,4 +210,71 @@ describe("TradePool", function () {
     await tradePool.connect(addr1).withdraw(tradeID, BUYER_SIDE);
     expect(await collateralMint.balanceOf(tradePool.address)).to.be.eq(0);
   });
+
+  it("create and deposit", async function () {
+    const [, addr1, addr2] = await ethers.getSigners();
+    const { collateralMint, digitalPayoffPool, tradePool, chainlinkAdapter } = await loadFixture(deployVyperSuite);
+
+    // digital payoff
+    const createPayoffSig = await digitalPayoffPool.createDigitalPayoff(
+      bn(1),
+      true,
+      chainlinkAdapter.address,
+      ORACLE_ID
+    );
+    const receiptPayoff = await createPayoffSig.wait(1);
+    const returnEventPayoff = receiptPayoff?.events?.pop();
+    const payoffID = returnEventPayoff?.args ? returnEventPayoff?.args[0] : 0;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const depositEnd = now + 2 * A_DAY_IN_SECONDS;
+    const settleStart = now + 15 * A_DAY_IN_SECONDS;
+
+    // addr1 create trade and deposit as buyer
+
+    {
+      // trade 1
+      await collateralMint.connect(addr1).approve(tradePool.address, LONG_REQUIRED_AMOUNT);
+      const createTradeSig = await tradePool
+        .connect(addr1)
+        .createAndDeposit(
+          collateralMint.address,
+          digitalPayoffPool.address,
+          payoffID,
+          depositEnd,
+          settleStart,
+          LONG_REQUIRED_AMOUNT,
+          SHORT_REQUIRED_AMOUNT,
+          BUYER_SIDE
+        );
+      const receipt = await createTradeSig.wait(1);
+      const returnEvent = receipt?.events?.pop();
+      const tradeID = returnEvent?.args ? returnEvent?.args[0] : 0;
+      const settleData = await tradePool.settleData(tradeID);
+      expect(settleData.longUser).to.be.eq(addr1.address);
+    }
+
+    {
+      // trade 2
+      await collateralMint.connect(addr1).approve(tradePool.address, SHORT_REQUIRED_AMOUNT);
+      await expect(
+        tradePool
+          .connect(addr1)
+          .createAndDeposit(
+            collateralMint.address,
+            digitalPayoffPool.address,
+            payoffID,
+            depositEnd,
+            settleStart,
+            LONG_REQUIRED_AMOUNT,
+            SHORT_REQUIRED_AMOUNT,
+            SELLER_SIDE
+          )
+      ).to.changeTokenBalances(
+        collateralMint,
+        [tradePool.address, addr1.address],
+        [SHORT_REQUIRED_AMOUNT, -SHORT_REQUIRED_AMOUNT]
+      );
+    }
+  });
 });
