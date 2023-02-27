@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {IOracleAdapter} from "./IOracleAdapter.sol";
 
-contract MockOracleAdapter is IOracleAdapter, Ownable {
+contract PermissionedOracleAdapter is IOracleAdapter, Ownable {
     mapping(uint256 => int256) public prices;
     uint256 private nextIdx = 0;
 

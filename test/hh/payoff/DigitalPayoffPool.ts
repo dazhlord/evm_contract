@@ -9,8 +9,8 @@ const ORACLE_PRICE_ID = bn(0);
 
 describe("DigitalPayoff", function () {
   async function deployContract() {
-    const MockOracleAdapter = await ethers.getContractFactory("MockOracleAdapter");
-    const mockOracleAdapter = await MockOracleAdapter.deploy();
+    const PermissionedOracleAdapter = await ethers.getContractFactory("PermissionedOracleAdapter");
+    const mockOracleAdapter = await PermissionedOracleAdapter.deploy();
 
     await mockOracleAdapter.setPrice(ORACLE_PRICE_ID, ORACLE_PRICE);
 
