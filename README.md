@@ -2,20 +2,17 @@
 
 ## Pool Addresses
 
-| name             | chain ID | chain name   | address                                    | pool owner                                 | deploy tx                                                          |
-| ---------------- | -------- | ------------ | ------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------ |
-| ChainlinkAdapter | 5        | `goerli`     | 0x6c38eE1372f8fD3Fe87c115321d5e48E897FD34e | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 | 0xe57436aa4c47620d06d6391cbe9cb8e6fd1f650104f8460a18f03e2a11d9441a |
-| DigitalPayoff    | 5        | `goerli`     | 0x89D5Df183F25a5ECdFa7b277480A42969dd4dDC6 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 | 0xf62825d33ed81dfeaedb11602d3fba10f6e52e4926249e3e7c6ca2ff8cf5b0d7 |
-| TradePool        | 5        | `goerli`     | 0x82e28B1D337c88174d15d216C1CF348e14243fA9 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 | 0x73ecf541e6b227245294acd259c8493cd97bde1533e346709a23537f79375c49 |
-| ChainlinkAdapter | 97       | `bscTestnet` | 0x165e1aE54925c0E8e9a726A0aa1eafD70C703f91 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 | 0x2b554c4246c2587c5f917c258d3f73040e09a40f190de3089c28e2a153298756 |
-| DigitalPayoff    | 97       | `bscTestnet` | 0x7D0Ae39374FCF2A81d447503db0ac6A36016cB92 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 | 0x7f042978f42a1573f3d7dabcbf57e7b701c849ddba9b93eac267a8753f11c2d3 |
-| TradePool        | 97       | `bscTestnet` | 0x93FF73D7CC9d920BC26980290918db37a19e753e | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 | 0xc4069adb9f9d5c58c315d8cccb2efc36d1bebc2b05b06dae9e35ea0679f238da |
-
-## How to use
-
-Install dependencies:
-
-```shell
-git submodule update --init --recursive
-yarn
-```
+| name                      | chain ID | chain name        | address                                    | pool owner                                 |
+| ------------------------- | -------- | ----------------- | ------------------------------------------ | ------------------------------------------ |
+| TradePool                 | 97       | `bsc testnet`     | 0xe1620108B43A0FD6245013C2BB7E60f3D27e3f05 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| DigitalPayoff             | 97       | `bsc testnet`     | 0x7D0Ae39374FCF2A81d447503db0ac6A36016cB92 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| ChainlinkAdapter          | 97       | `bsc testnet`     | 0x165e1aE54925c0E8e9a726A0aa1eafD70C703f91 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| PermissionedOracleAdapter | 97       | `bsc testnet`     | 0x8c5DD92e9d8B4B8E3165993F59b1518ddb747Dba | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| TradePool                 | 56       | `bsc`             | 0x9773f1aF15750216a17Bf8c689Bb0b95a5122D76 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| DigitalPayoff             | 56       | `bsc`             | 0xb3A70C05F3C69b5678eD039c98e061e68A2E676c | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| ChainlinkAdapter          | 56       | `bsc`             | 0x78B9aeBD84854e9d0989343599B248d72F8D0902 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| PermissionedOracleAdapter | 56       | `bsc`             | 0xB0c3728C0F275E1D6C455c856EFaDa2675A6B51d | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| TradePool                 | 421613   | `arbitrum goerli` | 0x1dc6cBcED5131cb03de4CE2d8233cB6B7c5BAADf | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| DigitalPayoff             | 421613   | `arbitrum goerli` | 0xbb3963512b9c0F28eFb4a3dcB1e0274A87d159E7 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| ChainlinkAdapter          | 421613   | `arbitrum goerli` | 0x58F4d3472fCFF98F30a34acB84E3A609dd6c02C5 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| PermissionedOracleAdapter | 421613   | `arbitrum goerli` | 0x5c22369A385eb2aa9D0Ad6A0995D58e8027618ce | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
