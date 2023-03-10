@@ -10,10 +10,9 @@ import "hardhat-storage-layout";
 
 require("dotenv").config();
 
-const PUBLIC_RPC_GOERLI = "https://eth-goerli.public.blastapi.io";
 const PUBLIC_RPC_BSC_MAINNET = "https://bsc-dataseed1.binance.org/";
 const PUBLIC_RPC_BSC_TESTNET = "https://data-seed-prebsc-1-s1.binance.org:8545/";
-const PUBLIC_RPC_ARB_GOERLI = "https://endpoints.omniatech.io/v1/arbitrum/goerli/public";
+const PUBLIC_RPC_ARB_TESTNET = "https://endpoints.omniatech.io/v1/arbitrum/goerli/public";
 
 const GAS_REPORTER_CONFIG = {
   ETH_ETHERSCAN: {
@@ -54,15 +53,7 @@ const config: HardhatUserConfig = {
     localhost: {
       url: "http://127.0.0.1:8545",
     },
-    hardhat: {
-      forking: {
-        url: process.env.RPC_GOERLI ?? PUBLIC_RPC_GOERLI,
-      },
-    },
-    goerli: {
-      url: process.env.RPC_GOERLI ?? PUBLIC_RPC_GOERLI,
-      accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
-    },
+    hardhat: {},
     bscMainnet: {
       url: process.env.RPC_BSC_MAINNET ?? PUBLIC_RPC_BSC_MAINNET,
       chainId: 56,
@@ -74,7 +65,7 @@ const config: HardhatUserConfig = {
       accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
     },
     arbGoerli: {
-      url: process.env.RPC_ARB_GOERLI ?? PUBLIC_RPC_ARB_GOERLI,
+      url: process.env.RPC_ARB_TESTNET ?? PUBLIC_RPC_ARB_TESTNET,
       chainId: 421613,
       accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
     },
