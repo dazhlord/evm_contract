@@ -6,11 +6,12 @@ async function main() {
   console.log("default signer:", deployer.address);
   console.log("default signer balance:", (await deployer.getBalance()).toString());
 
-  const PermissionedOracleAdapter = await ethers.getContractFactory("PermissionedOracleAdapter");
-  const oracleAdapter = await PermissionedOracleAdapter.deploy();
+  const factoryName = "PermissionedOracleAdapter";
+  const Factory = await ethers.getContractFactory(factoryName);
+  const c = await Factory.deploy();
 
-  await oracleAdapter.deployed();
-  console.log(`permissioned oracleAdapter contract deployed to ${oracleAdapter.address}`);
+  await c.deployed();
+  console.log(`${factoryName} contract deployed to ${c.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
