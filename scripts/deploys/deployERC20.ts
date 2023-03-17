@@ -9,8 +9,8 @@ async function main() {
 
   const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
   const erc20Mock = await ERC20Mock.deploy(
-    "Smoothie USD",
-    "smoothieUSD",
+    "Vyper USD",
+    "vypUSD",
     deployer.address,
     BigNumber.from(10000).mul(BigNumber.from(10).pow(18))
   );
