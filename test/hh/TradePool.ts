@@ -29,7 +29,7 @@ describe("TradePool", function () {
     // chainilink rate with goerli eth/usd
     const ChainlinkAdapter = await ethers.getContractFactory("ChainlinkAdapter");
     const chainlinkAdapter = await ChainlinkAdapter.deploy();
-    await chainlinkAdapter.insertOracle(CHAINLINK_AGGREGATORS.GOERLI_AGGREGATOR_ETH_USD);
+    await chainlinkAdapter.insertOracle(CHAINLINK_AGGREGATORS.BSC_MAINNET_AGGREGATOR_ETH_USD);
 
     const DigitalPayoffPool = await ethers.getContractFactory("DigitalPayoffPool");
     const digitalPayoffPool = await DigitalPayoffPool.deploy();

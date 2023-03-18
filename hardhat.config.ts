@@ -53,7 +53,12 @@ const config: HardhatUserConfig = {
     localhost: {
       url: "http://127.0.0.1:8545",
     },
-    hardhat: {},
+    hardhat: {
+      forking: {
+        url: process.env.RPC_BSC_MAINNET ?? PUBLIC_RPC_BSC_MAINNET,
+        blockNumber: 26576000,
+      },
+    },
     bscMainnet: {
       url: process.env.RPC_BSC_MAINNET ?? PUBLIC_RPC_BSC_MAINNET,
       chainId: 56,

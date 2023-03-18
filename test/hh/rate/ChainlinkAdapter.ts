@@ -16,7 +16,7 @@ describe("ChainlinkAdapter", function () {
   it("get latest price", async function () {
     const { chainlinkAdapter } = await loadFixture(deployContract);
 
-    const insertOracleSig = await chainlinkAdapter.insertOracle(CHAINLINK_AGGREGATORS.GOERLI_AGGREGATOR_ETH_USD);
+    const insertOracleSig = await chainlinkAdapter.insertOracle(CHAINLINK_AGGREGATORS.BSC_MAINNET_AGGREGATOR_ETH_USD);
     const receipt = await insertOracleSig.wait(1);
     const returnEvent = receipt?.events?.pop();
     const ETH_USD_oracleID = returnEvent?.args ? returnEvent?.args[0] : 0;
