@@ -14,5 +14,6 @@
 | PermissionedOracleAdapter | 56       | `bsc`             | 0xB0c3728C0F275E1D6C455c856EFaDa2675A6B51d | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
 | TradePool                 | 421613   | `arbitrum goerli` | 0x1dc6cBcED5131cb03de4CE2d8233cB6B7c5BAADf | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
 | DigitalPayoff             | 421613   | `arbitrum goerli` | 0xbb3963512b9c0F28eFb4a3dcB1e0274A87d159E7 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
+| ForwardPayoff             | 421613   | `arbitrum goerli` | 0x793FC3f275D1F3744bf21B824901ae357F2ca3f1 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
 | ChainlinkAdapter          | 421613   | `arbitrum goerli` | 0x58F4d3472fCFF98F30a34acB84E3A609dd6c02C5 | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
 | PermissionedOracleAdapter | 421613   | `arbitrum goerli` | 0x5c22369A385eb2aa9D0Ad6A0995D58e8027618ce | 0x02548256453D61E8Beb31013ebE8e5ddd412cBc6 |
