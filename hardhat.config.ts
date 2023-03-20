@@ -13,6 +13,7 @@ require("dotenv").config();
 const PUBLIC_RPC_BSC_MAINNET = "https://bsc-dataseed1.binance.org/";
 const PUBLIC_RPC_BSC_TESTNET = "https://data-seed-prebsc-1-s1.binance.org:8545/";
 const PUBLIC_RPC_ARB_GOERLI = "https://endpoints.omniatech.io/v1/arbitrum/goerli/public";
+const PUBLIC_RPC_ARB_MAINNET = "https://rpc.ankr.com/arbitrum";
 
 const GAS_REPORTER_CONFIG = {
   ETH_ETHERSCAN: {
@@ -72,6 +73,11 @@ const config: HardhatUserConfig = {
     arbGoerli: {
       url: process.env.RPC_ARB_GOERLI ?? PUBLIC_RPC_ARB_GOERLI,
       chainId: 421613,
+      accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
+    },
+    arbMainnet: {
+      url: process.env.RPC_ARB_MAINNET ?? PUBLIC_RPC_ARB_MAINNET,
+      chainId: 42161,
       accounts: process.env.ACCOUNT_PVT_KEY ? [process.env.ACCOUNT_PVT_KEY] : [],
     },
   },
