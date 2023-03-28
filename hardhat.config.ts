@@ -48,7 +48,7 @@ const config: HardhatUserConfig = {
   paths: {
     artifacts: "artifacts_hh",
     cache: "cache_hh",
-    tests: "test/v1",
+    tests: "test/v2",
   },
   networks: {
     localhost: {
