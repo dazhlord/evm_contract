@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../../lib/forge-std/src/Test.sol";
-import "../../lib/forge-std/src/console.sol";
+import "../../../lib/forge-std/src/Test.sol";
+import "../../../lib/forge-std/src/console.sol";
 import "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
-import "../../contracts/rate/ChainlinkAdapter.sol";
-import "../../contracts/payoff/ForwardPayoffPool.sol";
+import "../../../contracts/v1/rate/ChainlinkAdapter.sol";
+import "../../../contracts/v1/payoff/ForwardPayoffPool.sol";
 
 contract ForwardPayoffPoolTest is Test {
     ForwardPayoffPool internal forwardPayoffPool;
@@ -22,7 +22,8 @@ contract ForwardPayoffPoolTest is Test {
     function testCreateForwardPayoff(int256 _strike, uint88 _notional, bool _isLinear) public {
         forwardPayoffPool.createForwardPayoff(_strike, _notional, _isLinear, chainlinkAdapter, 0);
 
-        (IOracleAdapter oracleAdapter, bool isLinear, uint88 notional, int256 strike, uint256 oracleID) = forwardPayoffPool.forwardData(0);
+        (IOracleAdapter oracleAdapter, bool isLinear, uint88 notional, int256 strike, uint256 oracleID) =
+            forwardPayoffPool.forwardData(0);
 
         assertEq(address(oracleAdapter), address(chainlinkAdapter));
         assertEq(oracleID, 0);
@@ -31,15 +32,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(strike, _strike);
     }
 
-    function testLinearFlatReturn() public
-    {
+    function testLinearFlatReturn() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 100;
         int256 newSpotValue = 100;
         uint88 notional = 1;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -50,15 +50,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
 
-    function testInverseFlatReturn() public
-    {
+    function testInverseFlatReturn() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 100;
         int256 newSpotValue = 100;
         uint88 notional = 1;
         bool isLinear = false;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -69,15 +68,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
 
-    function testLinearSpotUp() public
-    {
+    function testLinearSpotUp() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 100;
         int256 newSpotValue = 120;
         uint88 notional = 1000;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -88,15 +86,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
 
-    function testLinearSpotDown() public
-    {
+    function testLinearSpotDown() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 100;
         int256 newSpotValue = 80;
         uint88 notional = 1000;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -107,15 +104,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
 
-    function testInverseSpotUp() public
-    {
+    function testInverseSpotUp() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 100;
         int256 newSpotValue = 120;
         uint88 notional = 1000;
         bool isLinear = false;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -127,15 +123,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
 
-    function testInverseSpotDown() public
-    {
+    function testInverseSpotDown() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 100;
         int256 newSpotValue = 80;
         uint88 notional = 1000;
         bool isLinear = false;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -145,16 +140,15 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlShort, 100250);
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
-    
-    function testLongBankrupt() public
-    {
+
+    function testLongBankrupt() public {
         uint256 longSide = 50000;
         uint256 shortSide = 100000;
         int256 strike = 100;
         int256 newSpotValue = 75;
         uint88 notional = 2000;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -164,16 +158,15 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlShort, 150000);
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
-    
-    function testShortBankrupt() public
-    {
+
+    function testShortBankrupt() public {
         uint256 longSide = 100000;
         uint256 shortSide = 50000;
         int256 strike = 100;
         int256 newSpotValue = 125;
         uint88 notional = 2000;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -183,16 +176,15 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlShort, 0);
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
-    
-    function testLunaRektLinear() public
-    {
+
+    function testLunaRektLinear() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 1;
         int256 newSpotValue = 0;
         uint88 notional = 1000;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -202,16 +194,15 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlShort, 101000);
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
-    
-    function testLunaRektInverse() public
-    {
+
+    function testLunaRektInverse() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 1;
         int256 newSpotValue = 0;
         uint88 notional = 1000;
         bool isLinear = false;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -221,16 +212,15 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlShort, 200000);
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
-    
-    function testZeroStrikeLinear() public
-    {
+
+    function testZeroStrikeLinear() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 0;
         int256 newSpotValue = 1;
         uint88 notional = 1000;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -240,16 +230,15 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlShort, 99000);
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
-    
-    function testZeroStrikeInverse() public
-    {
+
+    function testZeroStrikeInverse() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 0;
         int256 newSpotValue = 50;
         uint88 notional = 1000;
         bool isLinear = false;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -260,15 +249,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
 
-    function testLunaRektZeroStrikeLinear() public
-    {
+    function testLunaRektZeroStrikeLinear() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 0;
         int256 newSpotValue = 0;
         uint88 notional = 1000;
         bool isLinear = true;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);
@@ -279,15 +267,14 @@ contract ForwardPayoffPoolTest is Test {
         assertEq(pnlLong + pnlShort, longSide + shortSide);
     }
 
-    function testLunaRektZeroStrikeInverse() public
-    {
+    function testLunaRektZeroStrikeInverse() public {
         uint256 longSide = 100000;
         uint256 shortSide = 100000;
         int256 strike = 0;
         int256 newSpotValue = 0;
         uint88 notional = 1000;
         bool isLinear = false;
-        
+
         forwardPayoffPool.createForwardPayoff(strike, notional, isLinear, chainlinkAdapter, 0);
 
         mockChainlinkAggregator.updateAnswer(newSpotValue);

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../../lib/forge-std/src/Test.sol";
-import "../../contracts/rate/ChainlinkAdapter.sol";
+import "../../../lib/forge-std/src/Test.sol";
+import "../../../contracts/v1/rate/ChainlinkAdapter.sol";
 import "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
 
 contract ChainlinkAdapterTest is Test {

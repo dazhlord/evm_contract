@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../../lib/forge-std/src/Test.sol";
-import "../../lib/forge-std/src/console.sol";
+import "../../../lib/forge-std/src/Test.sol";
+import "../../../lib/forge-std/src/console.sol";
 import "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
-import "../../contracts/rate/ChainlinkAdapter.sol";
-import "../../contracts/payoff/DigitalPayoffPool.sol";
+import "../../../contracts/v1/rate/ChainlinkAdapter.sol";
+import "../../../contracts/v1/payoff/DigitalPayoffPool.sol";
 
 contract DigitalPayoffPoolTest is Test {
     DigitalPayoffPool internal digitalPayoffPool;

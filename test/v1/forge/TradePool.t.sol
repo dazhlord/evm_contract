@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../../lib/forge-std/src/Test.sol";
-import "../../lib/forge-std/src/console.sol";
-import "../../contracts/rate/ChainlinkAdapter.sol";
-import "../../contracts/payoff/DigitalPayoffPool.sol";
-import "../../contracts/TradePool.sol";
-import "../../contracts/utils/ERC20Mock.sol";
+import "../../../lib/forge-std/src/Test.sol";
+import "../../../lib/forge-std/src/console.sol";
+import "../../../contracts/v1/rate/ChainlinkAdapter.sol";
+import "../../../contracts/v1/payoff/DigitalPayoffPool.sol";
+import "../../../contracts/v1/TradePool.sol";
+import "../../../contracts/v1/utils/ERC20Mock.sol";
 import "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
 
 contract TradePoolTest is Test {
