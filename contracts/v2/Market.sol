@@ -44,6 +44,8 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     bytes32 public constant SECURITY_STAFF_ROLE = keccak256("SECURITY_STAFF_ROLE");
     bytes32 public constant FEE_COLLECTOR_ROLE = keccak256("FEE_COLLECTOR_ROLE");
 
+    uint8 public constant FEES_DECIMALS = 6;
+
     uint8 LONG_SIDE = 0;
     uint8 SHORT_SIDE = 1;
 
@@ -64,11 +66,14 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     // STRUCTS
 
     struct TradeOffer {
-        uint256[2] requiredAmounts;
-        uint256[2] claimableAmounts;
+        uint256 longRequiredAmount;
+        uint256 shortRequiredAmount;
+        uint256 longClaimableAmount;
+        uint256 shortClaimableAmount;
         OracleAdapterSnapshot oracleSnapshotOnSettlement;
         uint256 collectableFees;
-        address[2] sides;
+        address buyer;
+        address seller;
         OfferState state;
         uint256 settleTime;
     }
@@ -85,7 +90,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     /// @notice ERC20 token used as collateral
     address public collateral;
 
-    /// @notice coefficient used to calculate fees on settlement, used same decimals as collateral
+    /// @notice coefficient used to calculate fees on settlement in bps
     uint256 public feesPercentage = 0;
 
     /// @notice amount of collateral collectable as fees
@@ -101,15 +106,12 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     // METHODS
 
     /// @notice create a new market
-    /// @dev collateral and oracle need the same decimals amount
     /// @param _collateral ERC20 token used for collateral
     /// @param _oracle oracle adapter providing the source of truth
     constructor(address _collateral, IOracleAdapter _oracle) {
-        // check that collateral and oracle have the same decimals amount
-        require(
-            ERC20(_collateral).decimals() == _oracle.getLatestPrice().decimals,
-            "collateral and oracle have different decimals"
-        );
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(SECURITY_STAFF_ROLE, msg.sender);
+        _grantRole(FEE_COLLECTOR_ROLE, msg.sender);
 
         collateral = _collateral;
         oracle = _oracle;
@@ -134,11 +136,14 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
         IERC20(collateral).transferFrom(msg.sender, address(this), _isBuyer ? _longAmount : _shortAmount);
 
         TradeOffer memory newOffer = TradeOffer({
-            requiredAmounts: [_longAmount, _shortAmount],
-            claimableAmounts: [uint256(0), 0],
+            longRequiredAmount: _longAmount,
+            shortRequiredAmount: _shortAmount,
+            longClaimableAmount: uint256(0),
+            shortClaimableAmount: uint256(0),
             collectableFees: 0,
             oracleSnapshotOnSettlement: OracleAdapterSnapshot({price: 0, decimals: 0, updatedAt: 0}),
-            sides: _isBuyer ? [msg.sender, address(0)] : [address(0), msg.sender],
+            buyer: _isBuyer ? msg.sender : address(0),
+            seller: _isBuyer ? address(0) : msg.sender,
             state: OfferState.Open,
             settleTime: _settleTime
         });
@@ -166,17 +171,17 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
         TradeOffer storage offer = tradeOffers[_offerId];
 
-        // get current user side
-        uint8 userSide = _getAddressSide(offer.sides, msg.sender);
+        if (offer.buyer == msg.sender) {
+            IERC20(collateral).transfer(msg.sender, offer.longRequiredAmount);
+            offer.state = OfferState.Cancelled;
+            emit OfferCancelled(_offerId, msg.sender);
+        }
 
-        // transfer back collateral for this offer
-        IERC20(collateral).transfer(msg.sender, offer.requiredAmounts[userSide]);
-
-        // set offer new state: "Cancelled"
-        offer.state = OfferState.Cancelled;
-
-        // emit event
-        emit OfferCancelled(_offerId, msg.sender);
+        if (offer.seller == msg.sender) {
+            IERC20(collateral).transfer(msg.sender, offer.shortRequiredAmount);
+            offer.state = OfferState.Cancelled;
+            emit OfferCancelled(_offerId, msg.sender);
+        }
     }
 
     /// @notice EOA wallet takes the free side on an offer and deposits the required collateral
@@ -194,20 +199,24 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
         // check if settlement is in the future
         require(block.timestamp < offer.settleTime, "this offer can only be canceled");
 
-        // retrieve the free side
-        uint8 takerSide = offer.sides[0] == address(0) ? LONG_SIDE : SHORT_SIDE;
+        if (offer.buyer == address(0)) {
+            offer.buyer = msg.sender;
+            IERC20(collateral).transferFrom(msg.sender, address(this), offer.longRequiredAmount);
 
-        // set new the address side
-        offer.sides[takerSide] = msg.sender;
+            // emit event
+            emit OfferMatched(_offerId, msg.sender, true);
+        }
 
-        // transfer collateral
-        IERC20(collateral).transferFrom(msg.sender, address(this), offer.requiredAmounts[takerSide]);
+        if (offer.seller == address(0)) {
+            offer.seller = msg.sender;
+            IERC20(collateral).transferFrom(msg.sender, address(this), offer.shortRequiredAmount);
+
+            // emit event
+            emit OfferMatched(_offerId, msg.sender, false);
+        }
 
         // set offer new state: "Matched"
         offer.state = OfferState.Matched;
-
-        // emit event
-        emit OfferMatched(_offerId, msg.sender, takerSide == LONG_SIDE);
     }
 
     /// @notice settle offer using the selected payoff
@@ -226,26 +235,31 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
         require(block.timestamp > offer.settleTime, "settle not available yet");
 
         // read oracle price
-        OracleAdapterSnapshot memory oracleSnapshot = oracle.getLatestPrice();
+        offer.oracleSnapshotOnSettlement = oracle.getLatestPrice();
 
         // check that oracle answer is not stale
-        require((block.timestamp - oracleSnapshot.updatedAt) < staleOracleThreshold, "stale oracle answer");
+        require(
+            (block.timestamp - offer.oracleSnapshotOnSettlement.updatedAt) < staleOracleThreshold, "stale oracle answer"
+        );
 
-        uint256[2] memory payoffAmounts = _executePayoff(_offerId, oracleSnapshot, offer.requiredAmounts);
+        uint256[2] memory payoffAmounts = _executePayoff(
+            _offerId, offer.oracleSnapshotOnSettlement, [offer.longRequiredAmount, offer.shortRequiredAmount]
+        );
 
         // calculate fees
-        uint256 buyerFees = payoffAmounts[0] * feesPercentage;
-        uint256 sellerFees = payoffAmounts[1] * feesPercentage;
-        offer.claimableAmounts = [payoffAmounts[0] - buyerFees, payoffAmounts[1] - sellerFees];
+        uint256 buyerFees = payoffAmounts[0] * feesPercentage / (10 ** FEES_DECIMALS);
+        uint256 sellerFees = payoffAmounts[1] * feesPercentage / (10 ** FEES_DECIMALS);
+        offer.longClaimableAmount = payoffAmounts[0] - buyerFees;
+        offer.shortClaimableAmount = payoffAmounts[1] - sellerFees;
         offer.collectableFees = buyerFees + sellerFees;
 
         collectableFees += offer.collectableFees;
 
-        // set offer new state: "Matched"
-        offer.state = OfferState.Matched;
+        // set offer new state: "Settled"
+        offer.state = OfferState.Settled;
 
         // emit event
-        emit OfferSettled(_offerId, offer.claimableAmounts, offer.collectableFees);
+        emit OfferSettled(_offerId, [offer.longClaimableAmount, offer.shortClaimableAmount], offer.collectableFees);
     }
 
     /// @notice user claims his side
@@ -258,18 +272,26 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     {
         TradeOffer storage offer = tradeOffers[_offerId];
 
-        // get current user side
-        uint8 userSide = _getAddressSide(offer.sides, msg.sender);
-
-        if (offer.claimableAmounts[userSide] > 0) {
+        if (msg.sender == offer.buyer && offer.longClaimableAmount > 0) {
             // user claims collateral
-            IERC20(collateral).transfer(msg.sender, offer.claimableAmounts[userSide]);
+            IERC20(collateral).transfer(msg.sender, offer.longClaimableAmount);
 
             // emit event
-            emit OfferClaimed(_offerId, msg.sender, offer.claimableAmounts[userSide]);
+            emit OfferClaimed(_offerId, msg.sender, offer.longClaimableAmount);
 
             // reset claimable amount
-            offer.claimableAmounts[userSide] = 0;
+            offer.longClaimableAmount = 0;
+        }
+
+        if (msg.sender == offer.seller && offer.shortClaimableAmount > 0) {
+            // user claims collateral
+            IERC20(collateral).transfer(msg.sender, offer.shortClaimableAmount);
+
+            // emit event
+            emit OfferClaimed(_offerId, msg.sender, offer.shortClaimableAmount);
+
+            // reset claimable amount
+            offer.shortClaimableAmount = 0;
         }
     }
 
@@ -316,13 +338,6 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     /// @dev require SECURITY_STAFF role
     function unpause() public onlyRole(SECURITY_STAFF_ROLE) {
         _unpause();
-    }
-
-    function _getAddressSide(address[2] memory sides, address sender) internal view returns (uint8) {
-        if (sides[0] == sender) return LONG_SIDE;
-        if (sides[1] == sender) return SHORT_SIDE;
-
-        revert UnknownUser();
     }
 
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +

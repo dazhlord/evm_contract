@@ -2,7 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { bn } from "../utils";
+import { bn } from "../../../utils";
 
 describe("PermissionedOracleAdapter", function () {
   async function deployContract() {

@@ -2,7 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { bn } from "../utils";
+import { bn } from "../../../utils";
 
 const ORACLE_PRICE = bn(100);
 const ORACLE_PRICE_ID = bn(0);

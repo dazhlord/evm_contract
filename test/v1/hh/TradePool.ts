@@ -2,7 +2,7 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers, tracer } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { bn, CHAINLINK_AGGREGATORS, A_DAY_IN_SECONDS } from "./utils";
+import { bn, CHAINLINK_AGGREGATORS, A_DAY_IN_SECONDS } from "../../utils";
 
 const ORACLE_ID = bn(0);
 

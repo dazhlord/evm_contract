@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers, tracer } from "hardhat";
 import { BigNumber } from "ethers";
 import "@nomiclabs/hardhat-ethers";
-import { bn, CHAINLINK_AGGREGATORS } from "../utils";
+import { bn, CHAINLINK_AGGREGATORS } from "../../../utils";
 
 describe("ChainlinkAdapter", function () {
   async function deployContract() {
