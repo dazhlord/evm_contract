@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 library DigitalPayoffLib {
     function execute(int256 spotPrice, int256 strike, bool isCall, uint256 buyerInputAmount, uint256 sellerInputAmount)
-        public
+        internal
         pure
         returns (uint256 buyerOutputAmount, uint256 sellerOutputAmount)
     {

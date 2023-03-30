@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import {IOracleAdapter, OracleAdapterSnapshot} from "./oracle/IOracleAdapter.sol";
 
 /// @title A flexible deritivative market model
 /// @author giacomo@vyperprotocol.io
 /// @dev This is the abstract contract, derived contracts are payoff specific
-abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
+abstract contract Market is Initializable, PausableUpgradeable, AccessControlUpgradeable {
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // EVENTS
 
@@ -39,8 +39,8 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     bytes32 public constant SECURITY_STAFF_ROLE = keccak256("SECURITY_STAFF_ROLE");
     bytes32 public constant FEE_COLLECTOR_ROLE = keccak256("FEE_COLLECTOR_ROLE");
 
-    uint8 LONG_SIDE = 0;
-    uint8 SHORT_SIDE = 1;
+    uint8 constant LONG_SIDE = 0;
+    uint8 constant SHORT_SIDE = 1;
 
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // ENUMS
@@ -84,13 +84,16 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     address public collateral;
 
     /// @notice amount of collateral collectable as fees
-    uint256 public collectableFees = 0;
+    uint256 public collectableFees;
 
     /// @notice threshold used to check that oracle answer is not stale, default 1d (86400s)
-    uint256 public staleOracleThreshold = 86400;
+    uint256 public staleOracleThreshold;
 
     /// @notice address that receives collected fees
     address public feesReceiver;
+
+    // gap for future upgrades
+    uint256[32] __gap;
 
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // METHODS
@@ -98,7 +101,10 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     /// @notice create a new market
     /// @param _collateral ERC20 token used for collateral
     /// @param _oracle oracle adapter providing the source of truth
-    constructor(address _collateral, IOracleAdapter _oracle) {
+    function baseInitialize(address _collateral, IOracleAdapter _oracle) public onlyInitializing {
+        __Pausable_init();
+        __AccessControl_init();
+
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(SECURITY_STAFF_ROLE, msg.sender);
         _grantRole(FEE_COLLECTOR_ROLE, msg.sender);
@@ -106,6 +112,8 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
         collateral = _collateral;
         oracle = _oracle;
         feesReceiver = msg.sender;
+        collectableFees = 0;
+        staleOracleThreshold = 86400;
     }
 
     /// @notice create a new open offer
@@ -120,7 +128,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
         bool _isBuyer,
         uint256 _settleTime,
         bytes calldata _payoffData
-    ) public whenNotPaused nonReentrant {
+    ) public whenNotPaused {
         require(tx.origin == msg.sender, "EOA only");
 
         IERC20(collateral).transferFrom(msg.sender, address(this), _isBuyer ? _longAmount : _shortAmount);
@@ -151,12 +159,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     /// @notice wallet cancels an owned open (single funded) offer
     /// @param _offerId the offer id to claim
-    function cancelOffer(uint256 _offerId)
-        public
-        whenNotPaused
-        nonReentrant
-        onlyWithOfferOnState(_offerId, OfferState.Open)
-    {
+    function cancelOffer(uint256 _offerId) public whenNotPaused onlyWithOfferOnState(_offerId, OfferState.Open) {
         require(tx.origin == msg.sender, "EOA only");
 
         TradeOffer storage offer = tradeOffers[_offerId];
@@ -176,12 +179,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     /// @notice EOA wallet takes the free side on an offer and deposits the required collateral
     /// @param _offerId the offer id to claim
-    function matchOffer(uint256 _offerId)
-        public
-        whenNotPaused
-        nonReentrant
-        onlyWithOfferOnState(_offerId, OfferState.Open)
-    {
+    function matchOffer(uint256 _offerId) public whenNotPaused onlyWithOfferOnState(_offerId, OfferState.Open) {
         require(tx.origin == msg.sender, "EOA only");
 
         TradeOffer storage offer = tradeOffers[_offerId];
@@ -211,12 +209,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     /// @notice settle offer using the selected payoff
     /// @param _offerId the offer id to claim
-    function settleOffer(uint256 _offerId)
-        public
-        whenNotPaused
-        nonReentrant
-        onlyWithOfferOnState(_offerId, OfferState.Matched)
-    {
+    function settleOffer(uint256 _offerId) public whenNotPaused onlyWithOfferOnState(_offerId, OfferState.Matched) {
         require(tx.origin == msg.sender, "EOA only");
 
         TradeOffer storage offer = tradeOffers[_offerId];
@@ -251,12 +244,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     /// @notice user claims his side
     /// @param _offerId the offer id to claim
-    function claimOffer(uint256 _offerId)
-        public
-        whenNotPaused
-        nonReentrant
-        onlyWithOfferOnState(_offerId, OfferState.Settled)
-    {
+    function claimOffer(uint256 _offerId) public whenNotPaused onlyWithOfferOnState(_offerId, OfferState.Settled) {
         TradeOffer storage offer = tradeOffers[_offerId];
 
         if (msg.sender == offer.buyer && offer.longClaimableAmount > 0) {
@@ -284,7 +272,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     /// @notice collect all fees available
     /// @dev require FEE_COLLECTOR_ROLE role
-    function collectFees() public whenNotPaused nonReentrant onlyRole(FEE_COLLECTOR_ROLE) {
+    function collectFees() public whenNotPaused onlyRole(FEE_COLLECTOR_ROLE) {
         uint256 amount = collectableFees;
 
         // transfer fees
@@ -299,7 +287,7 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     /// @notice set a new fees receiver address
     /// @dev require SECURITY_STAFF role
-    function setFeesReceiver(address _newFeesReceiver) public nonReentrant onlyRole(SECURITY_STAFF_ROLE) {
+    function setFeesReceiver(address _newFeesReceiver) public onlyRole(SECURITY_STAFF_ROLE) {
         feesReceiver = _newFeesReceiver;
     }
 

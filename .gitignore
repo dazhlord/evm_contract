@@ -30,3 +30,5 @@ artifacts_forge/
 out/
 
 .env
+
+/coverage.json

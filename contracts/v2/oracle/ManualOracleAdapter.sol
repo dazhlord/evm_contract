@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import {IOracleAdapter, OracleAdapterSnapshot} from "./IOracleAdapter.sol";
-
 /// @title A manual oracle adapter
 /// @author giacomo@vyperprotocol.io
-contract ManualOracleAdapter is IOracleAdapter, AccessControl {
+
+contract ManualOracleAdapter is IOracleAdapter, AccessControl, Initializable {
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // CONSTANTS
 
@@ -25,12 +26,17 @@ contract ManualOracleAdapter is IOracleAdapter, AccessControl {
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // METHODS
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice build a new manual oracle adapter
     /// @dev if the isLive flag is enabled the snapshot will report the current block timestamp
     /// @param _ctorDescription description of current manual oracle adapter
     /// @param _ctorPrice initial price of the manual oracle
     /// @param _ctorDecimals decimals for the oracle price
-    constructor(bytes32 _ctorDescription, int256 _ctorPrice, uint8 _ctorDecimals) {
+    function initialize(bytes32 _ctorDescription, int256 _ctorPrice, uint8 _ctorDecimals) public initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(EDITOR_ROLE, msg.sender);
 

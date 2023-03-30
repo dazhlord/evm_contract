@@ -33,15 +33,20 @@ contract DigitalMarket is Market {
     mapping(uint256 => DigitalData) public digitalData;
 
     /// @notice coefficient used to calculate fees on settlement
-    uint256 public feesPercentage = 0;
+    uint256 public feesPercentage;
 
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // METHODS
 
-    /// @notice create a new digital market
-    /// @param _collateral ERC20 token used for collateral
-    /// @param _oracle oracle adapter providing the source of truth
-    constructor(address _collateral, IOracleAdapter _oracle) Market(_collateral, _oracle) {}
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _collateral, IOracleAdapter _oracle) public initializer {
+        Market.baseInitialize(_collateral, _oracle);
+        feesPercentage = 0;
+    }
 
     /// @notice Returns an array of digital data within the specified range
     /// @dev Pagination is used to fetch digital data objects in smaller chunks
@@ -101,7 +106,7 @@ contract DigitalMarket is Market {
 
     /// @notice set a new fees percentage
     /// @dev require SECURITY_STAFF role
-    function setFeesPercentage(uint256 _newFeesPercentage) public nonReentrant onlyRole(SECURITY_STAFF_ROLE) {
+    function setFeesPercentage(uint256 _newFeesPercentage) public onlyRole(SECURITY_STAFF_ROLE) {
         feesPercentage = _newFeesPercentage;
     }
 }

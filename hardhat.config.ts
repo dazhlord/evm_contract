@@ -2,6 +2,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-solhint";
 import "@nomicfoundation/hardhat-foundry";
+import "@openzeppelin/hardhat-upgrades";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 import "hardhat-tracer";
@@ -37,10 +38,10 @@ const GAS_REPORTER_CONFIG = {
   },
 
   // can't be used because of https://github.com/cgewecke/eth-gas-reporter/issues/283
-  // ETH_ARBITRUM: {
-  //   token: "ETH",
-  //   gasPriceApi: "https://api.arbiscan.io/api?module=proxy&action=eth_gasPrice&apiKey=" + process.env.ARBISCAN_API_KEY,
-  // },
+  ETH_ARBITRUM: {
+    token: "ETH",
+    gasPriceApi: "https://api.arbiscan.io/api?module=proxy&action=eth_gasPrice&apiKey=" + process.env.ARBISCAN_API_KEY,
+  },
 };
 
 const config: HardhatUserConfig = {
@@ -96,7 +97,7 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: !!process.env.ENABLE_GAS_REPORT,
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-    ...GAS_REPORTER_CONFIG.ETH_ETHERSCAN,
+    ...GAS_REPORTER_CONFIG.MATIC_POLYGON,
     // outputFile: "gas_report_asm+no_lib.txt",
     // noColors: true,
   },

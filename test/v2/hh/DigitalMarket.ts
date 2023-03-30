@@ -1,6 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { ethers, tracer } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { bn, A_DAY_IN_SECONDS } from "../../utils";
 import { BigNumber } from "ethers";
@@ -32,21 +32,17 @@ describe("DigitalMarket", function () {
     // create oracle
 
     const ManualOracleAdapter = await ethers.getContractFactory("ManualOracleAdapter");
-    const oracle = await ManualOracleAdapter.deploy(ethers.utils.formatBytes32String("test"), 1, 3);
+    const oracle = await upgrades.deployProxy(ManualOracleAdapter, [ethers.utils.formatBytes32String("test"), 1, 3]);
 
     // * * * * * * * * * * * * * *
     // create digital market
 
-    const DigitalPayoffLib = await ethers.getContractFactory("DigitalPayoffLib");
-    const digitalPayoffLib = await DigitalPayoffLib.deploy();
-    await digitalPayoffLib.deployed();
+    // const DigitalPayoffLib = await ethers.getContractFactory("DigitalPayoffLib");
+    // const digitalPayoffLib = await DigitalPayoffLib.deploy();
+    // await digitalPayoffLib.deployed();
 
-    const DigitalMarket = await ethers.getContractFactory("DigitalMarket", {
-      libraries: {
-        DigitalPayoffLib: digitalPayoffLib.address,
-      },
-    });
-    const digitalMarket = await DigitalMarket.deploy(collateral.address, oracle.address);
+    const DigitalMarket = await ethers.getContractFactory("DigitalMarket");
+    const digitalMarket = await upgrades.deployProxy(DigitalMarket, [collateral.address, oracle.address]);
 
     return { collateral, oracle, digitalMarket };
   }
