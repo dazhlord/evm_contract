@@ -26,11 +26,6 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
     event CollectedFees(uint256 amount);
 
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-    // ERRORS
-
-    error UnknownUser();
-
-    // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // MODIFIERS
 
     modifier onlyWithOfferOnState(uint256 offerID, OfferState state) {
@@ -43,8 +38,6 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     bytes32 public constant SECURITY_STAFF_ROLE = keccak256("SECURITY_STAFF_ROLE");
     bytes32 public constant FEE_COLLECTOR_ROLE = keccak256("FEE_COLLECTOR_ROLE");
-
-    uint8 public constant FEES_DECIMALS = 6;
 
     uint8 LONG_SIDE = 0;
     uint8 SHORT_SIDE = 1;
@@ -89,9 +82,6 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
 
     /// @notice ERC20 token used as collateral
     address public collateral;
-
-    /// @notice coefficient used to calculate fees on settlement in bps
-    uint256 public feesPercentage = 0;
 
     /// @notice amount of collateral collectable as fees
     uint256 public collectableFees = 0;
@@ -242,16 +232,13 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
             (block.timestamp - offer.oracleSnapshotOnSettlement.updatedAt) < staleOracleThreshold, "stale oracle answer"
         );
 
-        uint256[2] memory payoffAmounts = _executePayoff(
+        (uint256[2] memory payoffAmounts, uint256 feesAmount) = _executePayoff(
             _offerId, offer.oracleSnapshotOnSettlement, [offer.longRequiredAmount, offer.shortRequiredAmount]
         );
 
-        // calculate fees
-        uint256 buyerFees = payoffAmounts[0] * feesPercentage / (10 ** FEES_DECIMALS);
-        uint256 sellerFees = payoffAmounts[1] * feesPercentage / (10 ** FEES_DECIMALS);
-        offer.longClaimableAmount = payoffAmounts[0] - buyerFees;
-        offer.shortClaimableAmount = payoffAmounts[1] - sellerFees;
-        offer.collectableFees = buyerFees + sellerFees;
+        offer.longClaimableAmount = payoffAmounts[0];
+        offer.shortClaimableAmount = payoffAmounts[1];
+        offer.collectableFees = feesAmount;
 
         collectableFees += offer.collectableFees;
 
@@ -310,12 +297,6 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
         emit CollectedFees(amount);
     }
 
-    /// @notice set a new fees percentage
-    /// @dev require SECURITY_STAFF role
-    function setFeesPercentage(uint256 _newFeesPercentage) public nonReentrant onlyRole(SECURITY_STAFF_ROLE) {
-        feesPercentage = _newFeesPercentage;
-    }
-
     /// @notice set a new fees receiver address
     /// @dev require SECURITY_STAFF role
     function setFeesReceiver(address _newFeesReceiver) public nonReentrant onlyRole(SECURITY_STAFF_ROLE) {
@@ -357,5 +338,5 @@ abstract contract Market is Pausable, ReentrancyGuard, AccessControl {
         uint256 _offerId,
         OracleAdapterSnapshot memory _oracleAdapterSnapshot,
         uint256[2] memory _depositAmounts
-    ) internal virtual returns (uint256[2] memory payoffAmounts);
+    ) internal virtual returns (uint256[2] memory payoffAmounts, uint256 feesAmount);
 }

@@ -145,7 +145,7 @@ describe("DigitalMarket", function () {
 
   it("test fees", async function () {
     const [, alice, bob, tim] = await ethers.getSigners();
-    const { collateral, digitalMarket } = await loadFixture(deployPrograms);
+    const { oracle, collateral, digitalMarket } = await loadFixture(deployPrograms);
 
     const settleStart = getSettleTimeIn(15 * A_DAY_IN_SECONDS);
 
@@ -177,11 +177,11 @@ describe("DigitalMarket", function () {
     await time.increaseTo(settleStart + A_DAY_IN_SECONDS);
     await digitalMarket.settleOffer(0);
 
-    const trade = await digitalMarket.tradeOffers(0);
     const collectableFees = await digitalMarket.collectableFees();
     const feesPercentage = await digitalMarket.feesPercentage();
     const feesDecimals = await digitalMarket.FEES_DECIMALS();
 
+    const trade = await digitalMarket.tradeOffers(0);
     expect(trade.longClaimableAmount.add(trade.shortClaimableAmount).add(collectableFees)).to.be.eq(
       LONG_REQUIRED_AMOUNT.add(SHORT_REQUIRED_AMOUNT)
     );
@@ -203,6 +203,7 @@ describe("DigitalMarket", function () {
     await digitalMarket.connect(tim).collectFees();
 
     expect(await collateral.balanceOf(digitalMarket.address)).to.be.eq(0);
+    expect(await collateral.balanceOf(tim.address)).to.be.eq(collectableFees);
   });
 
   it("test pause market", async function () {

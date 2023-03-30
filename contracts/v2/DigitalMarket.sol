@@ -12,7 +12,12 @@ contract DigitalMarket is Market {
     // EVENTS
 
     event DigitalDataCreated(uint256 indexed id, bool isCall, int256 strike);
-    event DigitalPayoffExecuted(uint256 indexed id, uint256 buyerAmount, uint256 sellerAmount);
+    event DigitalPayoffExecuted(uint256 indexed id, uint256 buyerAmount, uint256 sellerAmount, uint256 feesAmount);
+
+    // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+    // CONSTANTS
+
+    uint8 public constant FEES_DECIMALS = 4;
 
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // STRUCTS
@@ -26,6 +31,9 @@ contract DigitalMarket is Market {
     // STATE
 
     mapping(uint256 => DigitalData) public digitalData;
+
+    /// @notice coefficient used to calculate fees on settlement
+    uint256 public feesPercentage = 0;
 
     // + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
     // METHODS
@@ -72,15 +80,28 @@ contract DigitalMarket is Market {
         uint256 _offerId,
         OracleAdapterSnapshot memory _oracleAdapterSnapshot,
         uint256[2] memory _depositAmounts
-    ) internal override returns (uint256[2] memory payoffAmounts) {
+    ) internal override returns (uint256[2] memory payoffAmounts, uint256 feesAmount) {
         DigitalData memory d = digitalData[_offerId];
 
         (uint256 buyerAmount, uint256 sellerAmount) = DigitalPayoffLib.execute(
             _oracleAdapterSnapshot.price, d.strike, d.isCall, _depositAmounts[0], _depositAmounts[1]
         );
 
-        payoffAmounts = [buyerAmount, sellerAmount];
+        uint256 buyerFees = buyerAmount * feesPercentage / (10 ** FEES_DECIMALS);
+        uint256 sellerFees = sellerAmount * feesPercentage / (10 ** FEES_DECIMALS);
 
-        emit DigitalPayoffExecuted(_offerId, buyerAmount, sellerAmount);
+        uint256 longPayoffAmount = buyerAmount - buyerFees;
+        uint256 shortPayoffAmount = sellerAmount - sellerFees;
+
+        payoffAmounts = [longPayoffAmount, shortPayoffAmount];
+        feesAmount = buyerFees + sellerFees;
+
+        emit DigitalPayoffExecuted(_offerId, payoffAmounts[0], payoffAmounts[1], feesAmount);
+    }
+
+    /// @notice set a new fees percentage
+    /// @dev require SECURITY_STAFF role
+    function setFeesPercentage(uint256 _newFeesPercentage) public nonReentrant onlyRole(SECURITY_STAFF_ROLE) {
+        feesPercentage = _newFeesPercentage;
     }
 }
