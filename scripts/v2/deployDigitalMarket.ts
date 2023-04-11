@@ -5,7 +5,7 @@ import { BigNumber } from "ethers";
 const FACTORY_NAME = "DigitalMarket";
 
 const COLLATERAL_ADDRESS = "0xa16C18f2ED14338F9E5F572E7991220D470574c3";
-const ORACLE_ADDRESS = "0x59C6f0C2AfA229964E5E24A85ca9c88D04AA6f2c";
+const ORACLE_ADDRESS = "0x244dbB916e8627e6353a9C60db96c891CA7F6D65";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
