@@ -9,3 +9,6 @@
 | ManualOracleAdapter               | 421613   | arbitrum-goerli | 0x59C6f0C2AfA229964E5E24A85ca9c88D04AA6f2c | 0xd56ec14d6bb33a4a48308039584ab6b34028041da444cf3802e036b76c934b11 |
 | ChainlinkOracleAdapter (BTC/ETH)  | 421613   | arbitrum-goerli | 0xAe583976cf53c4d8155d84bed524F4b5fdfDFab5 | 0x54da27c5f5f1737afe5e58dfc2ab381251f05f815ebd8fa346ab82528e3c4405 |
 | ChainlinkOracleAdapter (BTC/USD)  | 421613   | arbitrum-goerli | 0x244dbB916e8627e6353a9C60db96c891CA7F6D65 | 0xdfef8a381633ef3ac9d5134c3bde1ac0b4e9579bfc4433b1483b90a827ff77ba |
+| MintableERC20                     | 42161    | arbitrum        | 0x8e974A3aD362Ef92B75a635BE90D620A542E5927 | 0x934cf7738d342928967c66453360168c372b4b57641cb210fc77950a4ed333a7 |
+| ChainlinkOracleAdapter (BTC/USD)  | 42161    | arbitrum        | 0x11224BB67F7DB61d4376A14b58dF67f9AF2004C4 | 0x1e94a9421c5f4f065e2929ce7373bcf58b8e9873bea6d00d81f6adf518dd503d |
+| DigitalMarket (chainlink BTC/USD) | 42161    | arbitrum        | 0x37Abc8917250529E94869a5050deeE62542de20D | 0x458c3457d299cd3b7d0807a22f356fb968e65b71fc30c2e64a7deed90da5c43f |

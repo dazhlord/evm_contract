@@ -1,6 +1,5 @@
 import { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { BigNumber } from "ethers";
 
 const FACTORY_NAME = "ChainlinkOracleAdapter";
 
@@ -15,7 +14,7 @@ async function main() {
   const initialDeployerBalance = await deployer.getBalance();
 
   const Factory = await ethers.getContractFactory(FACTORY_NAME);
-  const c = await Factory.deploy("0x6550bc2301936011c1334555e62A87705A81C12C");
+  const c = await Factory.deploy("0x6ce185860a4963106506C203335A2910413708e9");
   await c.deployed();
 
   console.log(
